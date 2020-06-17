@@ -1,0 +1,8 @@
+.DS_Store
+*.pyc
+*.pt
+*.pth
+*.m~
+**/build
+**/devel
+/iiwa_stack

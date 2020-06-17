@@ -1,0 +1,5 @@
+calibration: 
+  scaling_x: 3.90625e-4 #0.2/512
+  scaling_y: 3.90625e-4
+  c_x: -0.1
+  c_z: 0

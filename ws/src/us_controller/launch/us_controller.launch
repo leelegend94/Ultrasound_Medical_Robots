@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <rosparam command="load" file="$(find us_controller)/launch/config/config.yaml" />
+
+  	<node name="us_controller" pkg="us_controller" type="us_controller_node" output="screen" />
+    
+</launch>
