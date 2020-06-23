@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(image_segmentation)
+project(us_image_processing)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -113,7 +113,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES image_segmentation
+#  LIBRARIES us_image_processing
 #  CATKIN_DEPENDS roscpp sensor_msgs
 #  DEPENDS system_lib
 #	DEPENDS Eigen
@@ -135,7 +135,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/image_segmentation.cpp
+#   src/${PROJECT_NAME}/us_image_processing.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -215,7 +215,7 @@ target_link_libraries(estimator_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_image_segmentation.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_us_image_processing.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -40,6 +40,8 @@ private:
     double nullspace_stiffness_;
     double nullspace_damping_;
 
+    double marching_vel_;
+
     //robot states
     geometry_msgs::Pose curr_pose;
     std::vector<double> force_;
@@ -85,9 +87,11 @@ public:
         
         INIT = false;
         nh_.param<std::vector<double>>("/controller/cartesian_stiffness", cartesian_stiffness_, {20,20,20,20,20,20});
+        //ROS_INFO_STREAM("cartesian stiffness: "<<cartesian_stiffness_[0]);
         nh_.param<std::vector<double>>("/controller/cartesian_damping", cartesian_damping_, {0.2,0.2,0.2,0.2,0.2,0.2});
         nh_.param<double>("/controller/nullspace_stiffness", nullspace_stiffness_, 10);
         nh_.param<double>("/controller/nullspace_damping", nullspace_damping_, 0.2);
+        nh_.param<double>("/scan/marching_vel", marching_vel_, 0.2);
 
         client_config_ = nh_.serviceClient<iiwa_msgs::ConfigureControlMode>("/iiwa/configuration/ConfigureControlMode");
         controller_init();
@@ -114,7 +118,7 @@ bool USController::scan_init(std_srvs::SetBool::Request  &req, std_srvs::SetBool
     if(req.data){
         init_pos();
         //debug
-        //pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose_debug",10);
+        // //pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose",10);
         // while(1){
         //     geometry_msgs::PoseStamped command;
         //     command.header.frame_id = BASE_LINK;
@@ -229,7 +233,7 @@ void USController::plan(const image_segmentation::VesselState::ConstPtr& msg){
 
     Eigen::Vector3d marching;
     //marching.setZero();
-    marching = 0.1*y_axis*dt;
+    marching = marching_vel_*y_axis*dt;
     ROS_INFO_STREAM("y: "<<y_axis(0)<<','<<y_axis(1)<<','<<y_axis(2));
     ROS_INFO_STREAM("dt: "<<dt);
     ROS_INFO_STREAM("marching: "<<marching(0)<<','<<marching(1)<<','<<marching(2));

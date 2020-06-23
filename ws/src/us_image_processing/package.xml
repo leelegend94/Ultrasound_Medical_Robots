@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>image_segmentation</name>
+  <name>us_image_processing</name>
   <version>0.0.0</version>
-  <description>The image_segmentation package</description>
+  <description>The us_image_processing package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

@@ -102,22 +102,32 @@ private:
 		grad.assign({0.0, 0.0});
 		double cost = 0;
 
+		n1 = n[0]; n2 = n[1]; n3 = 1;
+		n_d1 = data_ptr->n_d[0];
+		n_d2 = data_ptr->n_d[1];
+		n_d3 = 1;
+	
 		for(int i=0; i<num_pc; i++){
 			cp1 = data_ptr->pc_ptr->points[i].x;
 			cp2 = data_ptr->pc_ptr->points[i].y;
 			cp3 = data_ptr->pc_ptr->points[i].z;
 
-			n1 = n[0]; n2 = n[1]; n3 = 1;
-			n_d1 = data_ptr->n_d[0];
-			n_d2 = data_ptr->n_d[1];
-			n_d3 = 1;
-
 			//TODO: optimize this block by using matlab ccode
+			/*
 			grad[0] += (cp2*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
 			grad[1] += (cp1*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
 
 			cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
+			*/
+			grad[0] += (cp2*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
+			grad[1] += (cp1*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
+		
+			cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
 		}
+		grad[0] += n1*2.0-n_d1*2.0;
+		grad[1] += n2*2.0-n_d2*2.0;
+
+		cost += pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
 	}
@@ -164,7 +174,7 @@ int main(int argc, char** argv){
 
 	ros::Publisher pub_vesselState = nh.advertise<image_segmentation::VesselState>("/vessel_state",10);
 	//debug
-	//ros::Publisher pub_debug_pc2 = nh.advertise<sensor_msgs::PointCloud2>("debug_vessel_pc2_trans",10);
+	// ros::Publisher pub_debug_pc2 = nh.advertise<sensor_msgs::PointCloud2>("debug_vessel_pc2_trans",10);
 	//
 
 	//wait until the buffer is full
@@ -201,7 +211,7 @@ int main(int argc, char** argv){
 		//debug
 		// sensor_msgs::PointCloud2 msg_debug_pc2;
 		// pcl::toROSMsg(vessel_points, msg_debug_pc2);
-		// msg_debug_pc2.header.frame_id = "world";
+		// msg_debug_pc2.header.frame_id = "iiwa_link_0";
 		// pub_debug_pc2.publish(msg_debug_pc2);
 		//
 
@@ -217,7 +227,7 @@ int main(int argc, char** argv){
 		msg_vesselState.centroid.z = centroid(2);
 		msg_vesselState.direction.x = n[0];
 		msg_vesselState.direction.y = n[1];
-		msg_vesselState.direction.z = n[2];
+		msg_vesselState.direction.z = 1;
 		pub_vesselState.publish(msg_vesselState);
 
 		n_ = n;
