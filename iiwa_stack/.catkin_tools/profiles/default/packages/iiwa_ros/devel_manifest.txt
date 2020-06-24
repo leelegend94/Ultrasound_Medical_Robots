@@ -1,6 +1,0 @@
-iiwa_ros
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_ros/cmake.lock /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/./cmake.lock
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_ros/lib/libiiwa_ros.so /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/lib/libiiwa_ros.so
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_ros/lib/pkgconfig/iiwa_ros.pc /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/lib/pkgconfig/iiwa_ros.pc
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_ros/share/iiwa_ros/cmake/iiwa_rosConfig-version.cmake /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/share/iiwa_ros/cmake/iiwa_rosConfig-version.cmake
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_ros/share/iiwa_ros/cmake/iiwa_rosConfig.cmake /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/share/iiwa_ros/cmake/iiwa_rosConfig.cmake

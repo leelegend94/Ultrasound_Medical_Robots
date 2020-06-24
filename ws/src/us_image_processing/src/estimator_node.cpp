@@ -3,7 +3,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/Vector3.h>
 
-#include <image_segmentation/VesselState.h>
+#include <us_image_processing/VesselState.h>
 
 #include <pcl_ros/transforms.h>
 #include <pcl_ros/point_cloud.h>
@@ -172,7 +172,7 @@ int main(int argc, char** argv){
 
 	Optimizer optim(2);
 
-	ros::Publisher pub_vesselState = nh.advertise<image_segmentation::VesselState>("/vessel_state",10);
+	ros::Publisher pub_vesselState = nh.advertise<us_image_processing::VesselState>("/vessel_state",10);
 	//debug
 	// ros::Publisher pub_debug_pc2 = nh.advertise<sensor_msgs::PointCloud2>("debug_vessel_pc2_trans",10);
 	//
@@ -219,7 +219,7 @@ int main(int argc, char** argv){
 		n = optim.optimize(n_);
 
 		//send vessel state
-		image_segmentation::VesselState msg_vesselState;
+		us_image_processing::VesselState msg_vesselState;
 		msg_vesselState.header.stamp = ros::Time::now();
 		msg_vesselState.header.frame_id = "iiwa_link_0";
 		msg_vesselState.centroid.x = centroid(0);

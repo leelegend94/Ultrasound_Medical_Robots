@@ -4,7 +4,7 @@
 #include <geometry_msgs/WrenchStamped.h>
 #include <geometry_msgs/PointStamped.h>
 
-#include <image_segmentation/VesselState.h>
+#include <us_image_processing/VesselState.h>
 
 #include <sensor_msgs/Image.h>
 #include <std_srvs/SetBool.h>
@@ -67,7 +67,7 @@ private:
     /*------------------------------*/
     void updatePose(const geometry_msgs::PoseStampedConstPtr& msg);
     void updateWrench(const geometry_msgs::WrenchStampedConstPtr& msg);
-    void plan(const image_segmentation::VesselState::ConstPtr& msg);
+    void plan(const us_image_processing::VesselState::ConstPtr& msg);
 
     bool scan_init(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res);
 
@@ -169,7 +169,7 @@ void USController::init_pos(void){
     return;
 }
 
-void USController::plan(const image_segmentation::VesselState::ConstPtr& msg){
+void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     tf_ = ros::Time::now();
     //double dt = 1e-9*(tf_.nsec-ti_.nsec);
     double dt = (tf_-ti_).toSec();

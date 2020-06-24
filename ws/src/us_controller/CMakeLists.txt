@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_srvs
-  image_segmentation
+  us_image_processing
   tf2
   tf2_ros
 )
@@ -112,7 +112,7 @@ catkin_package(
 #  LIBRARIES us_controller
 #  CATKIN_DEPENDS iiwa_msgs iiwa_ros roscpp sensor_msgs
 #  DEPENDS system_lib
-	DEPENDS image_segmentation
+	DEPENDS us_image_processing
 )
 
 ###########

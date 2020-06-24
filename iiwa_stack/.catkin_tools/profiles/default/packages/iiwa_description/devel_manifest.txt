@@ -1,5 +1,0 @@
-iiwa_description
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_description/cmake.lock /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/./cmake.lock
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_description/lib/pkgconfig/iiwa_description.pc /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/lib/pkgconfig/iiwa_description.pc
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_description/share/iiwa_description/cmake/iiwa_descriptionConfig.cmake /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/share/iiwa_description/cmake/iiwa_descriptionConfig.cmake
-/home/zhenyuli/workspace/us_robot/iiwa_stack/devel/.private/iiwa_description/share/iiwa_description/cmake/iiwa_descriptionConfig-version.cmake /home/zhenyuli/workspace/us_robot/iiwa_stack/devel/share/iiwa_description/cmake/iiwa_descriptionConfig-version.cmake
