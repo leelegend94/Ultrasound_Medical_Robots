@@ -26,6 +26,8 @@ find_library(nlopt_LIBRARIES nlopt /usr/local/lib)
 # System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
+set(OpenIGTLink_DIR /home/zhenyuli/.local/OpenIGTLink/build)
+find_package(OpenIGTLink REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -126,11 +128,12 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   "/usr/local/include"
+  ${OpenIGTLink_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -146,8 +149,9 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/image_segmentation_node.cpp)
+add_executable(image_segmentation_node src/image_segmentation_node.cpp)
 add_executable(estimator_node src/estimator_node.cpp)
+add_executable(igtl_read_node src/igtl_read_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,16 +161,22 @@ add_executable(estimator_node src/estimator_node.cpp)
 
 # Add cmake target dependencies of the executable
 # same as for the library above
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(image_segmentation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(estimator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(igtl_read_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(image_segmentation_node
   ${catkin_LIBRARIES}
   ${TORCH_LIBRARIES}
 )
 target_link_libraries(estimator_node
   ${catkin_LIBRARIES}
   ${nlopt_LIBRARIES}
+)
+target_link_libraries(igtl_read_node
+  ${catkin_LIBRARIES}
+  OpenIGTLink
 )
 #############
 ## Install ##

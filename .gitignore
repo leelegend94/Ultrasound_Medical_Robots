@@ -5,4 +5,5 @@
 *.m~
 **/build
 **/devel
+**/.ipynb_checkpoints
 /iiwa_stack
