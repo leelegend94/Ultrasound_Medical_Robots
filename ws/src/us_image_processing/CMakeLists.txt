@@ -26,7 +26,7 @@ find_library(nlopt_LIBRARIES nlopt /usr/local/lib)
 # System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
-set(OpenIGTLink_DIR /home/zhenyuli/.local/OpenIGTLink/build)
+set(OpenIGTLink_DIR $ENV{HOME}/.local/OpenIGTLink/build)
 find_package(OpenIGTLink REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures

@@ -51,10 +51,13 @@ private:
 		std::memcpy((void *)resultImg8.data, (uint8_t *)image->GetScalarPointer(), image->GetImageSize());
 		// ROS_INFO_STREAM("succeed!");
 
+		cv::Mat img_fixedsize(512,512, resultImg8.type());
+    	cv::resize(resultImg8, img_fixedsize, img_fixedsize.size(), 0,0,cv::INTER_LINEAR);
+    	
 		cv_bridge::CvImage cv_img;
 		cv_img.header.stamp = ros::Time::now();
 		cv_img.encoding = "mono8";
-		cv_img.image = resultImg8;
+		cv_img.image = img_fixedsize;
 
 		pub_image.publish(cv_img.toImageMsg());
 		// ROS_INFO_STREAM("published!");

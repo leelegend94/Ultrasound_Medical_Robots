@@ -67,12 +67,19 @@ void ImageSegmentation::unet_inference(const sensor_msgs::Image::ConstPtr& msg){
     }
 
     cv::Mat img_cv = cv_ptr->image;
+
+    //cv::Mat img_fixedsize(512,512, img_cv.type());
+    //cv::resize(img_cv, img_fixedsize, img_fixedsize.size(), 0,0,cv::INTER_LINEAR);
+    //img_cv = img_fixedsize;
+    //ROS_INFO_STREAM("image ready");
     torch::Tensor img_tensor = torch::from_blob(img_cv.data, { img_cv.rows, img_cv.cols, 1}, torch::kByte);
     img_tensor = img_tensor.permute({2,0,1});
     img_tensor = img_tensor.toType(torch::kFloat);
     img_tensor = img_tensor.div(255).sub(0.5).mul(2).unsqueeze(0);
     img_tensor = img_tensor.to(torch::kCUDA);
+    //ROS_INFO_STREAM("before inference");
     torch::Tensor segmentation = module_->forward({img_tensor}).toTensor();
+    //ROS_INFO_STREAM("after inference");
     segmentation = segmentation.squeeze(3); //I have no idea why only this works, probably a bug in libtorch
     segmentation = segmentation.detach();
     
@@ -191,10 +198,10 @@ int main(int argc, char** argv){
 	torch::jit::script::Module module;
 	try {
 		// Deserialize the ScriptModule from a file using torch::jit::load().
-		module = torch::jit::load("/home/zhenyuli/workspace/us_robot/unet_usseg_traced.pt");
+		module = torch::jit::load("/home/eadu/workspace/us_robot/unet_usseg_traced.pt");
 	}
 	catch (const c10::Error& e) {
-		std::cerr << "error loading the model\n";
+		std::cerr << "error loading the model: "<<e.what()<<"\n";
 		return -1;
 	}
 	module.to(at::kCUDA);
