@@ -316,9 +316,9 @@ int main(int argc, char** argv){
 
     USController node(nh);
 
-    //ros::MultiThreadedSpinner spinner(4);
-    //spinner.spin();
-    ros::spin();
+    ros::MultiThreadedSpinner spinner(4);
+    spinner.spin();
+    //ros::spin();
 
     return 0;
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+	<!--<arg name="model" default="iiwa14"/>-->
+    <!-- LAUNCH IMPLEMENTATION -->
+    <rosparam command="load" file="$(find us_image_processing)/launch/config/config.yaml" />
+
+    <!--<include file="$(find iiwa_gazebo)/launch/iiwa_gazebo_with_sunrise.launch">
+    <arg name="model" value="$(arg model)" />
+  	</include>-->
+
+  	<node name="us_image_processing" pkg="us_image_processing" type="image_segmentation_node" output="screen" />
+
+  	<!--<node name="rviz" pkg="rviz" type="rviz" />-->
+    
+</launch>
