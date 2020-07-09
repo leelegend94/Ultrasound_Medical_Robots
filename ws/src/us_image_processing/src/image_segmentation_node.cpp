@@ -196,9 +196,11 @@ int main(int argc, char** argv){
 	ros::NodeHandle nh;
 
 	torch::jit::script::Module module;
+    std::string home = std::getenv("HOME");
+    std::string path = home + "/workspace/us_robot/unet_usseg_traced.pt";
 	try {
 		// Deserialize the ScriptModule from a file using torch::jit::load().
-		module = torch::jit::load("/home/eadu/workspace/us_robot/unet_usseg_traced.pt");
+		module = torch::jit::load(path);
 	}
 	catch (const c10::Error& e) {
 		std::cerr << "error loading the model: "<<e.what()<<"\n";
