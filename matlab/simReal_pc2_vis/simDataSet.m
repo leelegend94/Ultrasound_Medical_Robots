@@ -1,7 +1,7 @@
 
-ndataset = 100;
-%path = "/home/zhenyuli/workspace/us_robot/DataSet/SimRealDataset";
-path = "/home/zhenyuli/workspace/us_robot/DataSet/SimRealDatasetTest";
+ndataset = 3000;
+path = "/home/zhenyuli/workspace/us_robot/DataSet/SimRealDataset";
+%path = "/home/zhenyuli/workspace/us_robot/DataSet/SimRealDatasetTest";
 if exist(path,'dir')
     rmdir(path,'s')
     mkdir(path)
@@ -39,6 +39,7 @@ while(cntr<ndataset)
     [image,label] = vesselSim(Xc,Yc,Zc,Hdw,false,background);
     
     %if(~(sum(sum(label))<1000 && rand()<0.5))
+    if(image~=-1)
         cntr = cntr+1;
         curr_sample_path = fullfile(path,num2str(cntr,'%04d'));
         mkdir(curr_sample_path)
@@ -49,6 +50,7 @@ while(cntr<ndataset)
         imwrite(label,flabel); 
         disp(cntr)
         disp(sum(sum(label)))
+    end
     %end
 
 end

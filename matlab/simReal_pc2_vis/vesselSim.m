@@ -81,8 +81,12 @@ if(background==0)
     I(I>1) = 1;
 else
     I = background;
-    I(label_seg==1) = MAlpha*I(label_seg==1);
-    I = imgaussfilt(I,1);
+    if(sum(I(label_seg==1))>500)
+        I(label_seg==1) = MAlpha*I(label_seg==1);
+        I = imgaussfilt(I,[1,4]);
+    else
+        I = -1;
+    end
 end
 
 %return
