@@ -6,5 +6,6 @@
 **/build
 **/devel
 **/.ipynb_checkpoints
+**/.imageLabelingSession_SessionData
 /iiwa_stack
 /DataSet
