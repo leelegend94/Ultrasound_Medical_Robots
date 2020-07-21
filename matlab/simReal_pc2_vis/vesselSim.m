@@ -46,10 +46,10 @@ end
 
 %transform all vesssel 3d points to detector frame 
 P_d = Hdw\[reshape(Xc,1,[]);reshape(Yc,1,[]);reshape(Zc,1,[]);ones(1,numel(Xc))];
-validPoint = P_d([1,3],abs(P_d(2,:))<=1e-3);
+validPoint_ = P_d([1,3],abs(P_d(2,:))<=1e-3);
 
-validPoint(1,:) = round(validPoint(1,:)/width*px_width);
-validPoint(2,:) = round(validPoint(2,:)/depth*px_depth);
+validPoint(1,:) = round(validPoint_(1,:)/width*px_width);
+validPoint(2,:) = round(validPoint_(2,:)/depth*px_depth);
 
 % ellipse fitting for the cutting edge
 A = [validPoint(1,:).^2',(validPoint(1,:).*validPoint(2,:))',validPoint(2,:).^2',validPoint',ones(size(validPoint,2),1)];
@@ -70,7 +70,7 @@ for i=1:px_depth
     end
 end
 
-MAlpha = 0.25;
+MAlpha = 0.2+0.2*rand;
 if(background==0)
     % adding US-specific texture to the image
     I = 6*imnoise(image,'salt & pepper', 0.1).*rand(size(image));
@@ -81,8 +81,25 @@ if(background==0)
     I(I>1) = 1;
 else
     I = background;
+    if(rand>0.7)
+        edge_size = round(10+30*rand);
+        if(rand>0.5)
+            I(1:edge_size,:) = 0;
+            I(end-edge_size+1:end,:) = 0;
+        else
+            I(:,1:edge_size) = 0;
+            I(:,end-edge_size+1:end) = 0;
+        end
+    end
     if(sum(I(label_seg==1))>500)
-        I(label_seg==1) = MAlpha*I(label_seg==1);
+        alpha_mask = label_seg;
+        for i = 1:size(validPoint_,2)
+            if(validPoint_(1,i)>=1 && validPoint_(2,i)>=1)
+                alpha_mask(round(validPoint_(1,i)),round(validPoint_(2,i))) = 0;
+            end
+        end
+        
+        I(alpha_mask==1) = MAlpha*I(alpha_mask==1);
         I = imgaussfilt(I,[1,4]);
     else
         I = -1;

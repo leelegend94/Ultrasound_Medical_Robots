@@ -1,7 +1,7 @@
 
 ndataset = 3000;
 path = '~/workspace/us_robot/DataSet/SimRealDataset';
-%path = '~/workspace/us_robot/DataSet/SimRealDatasetTest;
+%path = '~/workspace/us_robot/DataSet/SimRealDatasetTest';
 if exist(path,'dir')
     rmdir(path,'s')
     mkdir(path)
@@ -35,7 +35,7 @@ while(cntr<ndataset)
 
     bg_file = bg_list(randi(length(bg_list),1)).name;
     background = double(rgb2gray(imread([bg_path,'/',bg_file])))/255;
-    
+     
     [image,label] = vesselSim(Xc,Yc,Zc,Hdw,false,background);
     
     %if(~(sum(sum(label))<1000 && rand()<0.5))
