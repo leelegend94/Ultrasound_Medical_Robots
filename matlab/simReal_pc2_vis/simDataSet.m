@@ -29,9 +29,9 @@ cntr = 0;
 
 while(cntr<ndataset)    
     %x: [-1.5 2] z:[-4 5]
-    R1 = eul2rotm([random_in_range([1,2],[-0.1,0.1]),0]);
+    R1 = eul2rotm([random_in_range(1,[-2,0]),random_in_range(1,[-0.1,0.1]),random_in_range(1,[-1.1,0.9])]);
     T1 = [random_in_range(1,[-0.02,0.02]);0;random_in_range(1,[-0.02,0.02])];
-    Hdw = [R1 T1; 0 0 0 1]*Hdw_init;
+    Hdw = Hdw_init*[R1 T1; 0 0 0 1];
 
     bg_file = bg_list(randi(length(bg_list),1)).name;
     background = double(rgb2gray(imread([bg_path,'/',bg_file])))/255;
@@ -50,6 +50,11 @@ while(cntr<ndataset)
         imwrite(label,flabel); 
         disp(cntr)
         disp(sum(sum(label)))
+        
+        if(mod(cntr,10)==0)
+            disp("new diameter");
+            [Xc,Yc,Zc] = genVessel(random_in_range(1,[0.0075,0.02]),Hvw);
+        end
     end
     %end
 

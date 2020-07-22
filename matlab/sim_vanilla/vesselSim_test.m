@@ -25,11 +25,11 @@ depth = 0.2;
 px_depth = 512;
 px_width = px_depth/depth*width;
 
-Hdw = [-1 0  0  T(1);
+Hdw_init = [-1 0  0  T(1);
          0 1  0  T(2);
          0 0 -1  0;
          0 0  0  1];
-         
+Hdw = Hdw_init*[eul2rotm([-1,0,-0.1]),zeros(3,1);0 0 0 1];
 % X = repmat(-31:32,128,1)/px_width*width;
 % Y = zeros(size(X));
 % Z = repmat(0:127,64,1)'/px_depth*depth;
