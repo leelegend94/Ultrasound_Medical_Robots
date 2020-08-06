@@ -68,7 +68,7 @@ class UltraSoundDataSet_OF(Dataset):
         first_frames = config.get('stream_begin',[])
 
         tmp = os.listdir(root_dir+'/img')
-        tmp = list(filter(lambda x: x.endswith('png'), tmp))
+        tmp = sorted(list(filter(lambda x: x.endswith('png'), tmp)))
         #remove all first frames to ensure there is always a previous frame
         for ff in first_frames:
             file_name = "img%04d.png" %int(ff)
