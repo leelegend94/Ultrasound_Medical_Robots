@@ -70,7 +70,7 @@ for i=1:px_depth
     end
 end
 
-MAlpha = 0.2+0.2*rand;
+MAlpha = 0.4*rand;
 if(background==0)
     % adding US-specific texture to the image
     I = 6*imnoise(image,'salt & pepper', 0.1).*rand(size(image));

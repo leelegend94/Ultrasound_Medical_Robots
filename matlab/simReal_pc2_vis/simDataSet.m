@@ -1,7 +1,7 @@
 
-ndataset = 3000;
-path = '~/workspace/us_robot/DataSet/SimRealDataset';
-%path = '~/workspace/us_robot/DataSet/SimRealDatasetTest';
+ndataset = 100;
+%path = '~/workspace/us_robot/DataSet/SimRealDataset';
+path = '~/workspace/us_robot/DataSet/SimRealDatasetTest';
 if exist(path,'dir')
     rmdir(path,'s')
     mkdir(path)

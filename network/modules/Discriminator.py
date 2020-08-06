@@ -14,7 +14,11 @@ class Discriminator(nn.Module):
         self.dis_conv2 = nn.Conv2d(256, 512, kernel_size = 3, padding=1)
         #self.dis_pool2 = nn.MaxPool2d(2, 2)
         
-        self.output = nn.Linear(512,1)
+        self.output = nn.Sequential(
+                        nn.Linear(512,128),
+                        nn.ReLU(inplace=True),
+                        nn.Linear(128,1)
+                        )
         
         
     def forward(self, input, mask):
