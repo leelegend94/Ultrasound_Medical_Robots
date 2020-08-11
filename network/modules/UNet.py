@@ -227,42 +227,52 @@ class UNet3(nn.Module):
                 nn.ReLU(inplace=True)
         )
 
+def DoubleConv2d(in_channels,features):
+        return nn.Sequential(
+                nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
+                nn.BatchNorm2d(features),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(features, features, kernel_size=3, padding=1),
+                nn.BatchNorm2d(features),
+                nn.ReLU(inplace=True)
+        )
+
 class UNet_OF(nn.Module):
     def __init__(self,in_channels=1,out_channels=1,init_features=64,input_size=256):
         super(UNet_OF, self).__init__()
 
         features = init_features
-        self.encoder_optfl = nn.Sequential(UNet.DoubleConv2d(in_channels,32),
+        self.encoder_optfl = nn.Sequential(DoubleConv2d(in_channels,32),
                                             nn.Conv2d(32,1,kernel_size=1),
                                             nn.ReLU(inplace=True)
                                             )
 
-        self.encoder1 = UNet.DoubleConv2d(in_channels,features)
+        self.encoder1 = DoubleConv2d(in_channels,features)
         self.pool1 = nn.MaxPool2d(2, 2)
         
-        self.encoder2 = UNet.DoubleConv2d(features,2*features)
+        self.encoder2 = DoubleConv2d(features,2*features)
         self.pool2 = nn.MaxPool2d(2, 2)
 
-        self.encoder3 = UNet.DoubleConv2d(2*features,4*features)
+        self.encoder3 = DoubleConv2d(2*features,4*features)
         self.pool3 = nn.MaxPool2d(2, 2)
         
-        self.encoder4 = UNet.DoubleConv2d(4*features,8*features)
+        self.encoder4 = DoubleConv2d(4*features,8*features)
         self.pool4 = nn.MaxPool2d(2, 2)
         
-        self.bottleneck = UNet.DoubleConv2d(8*features,16*features)
+        self.bottleneck = DoubleConv2d(8*features,16*features)
         
         self.upconv4 = nn.ConvTranspose2d(16*features,8*features,kernel_size=2,stride=2)        
-        self.decoder4 = UNet.DoubleConv2d(16*features,8*features) #concate, 2*8=16
+        self.decoder4 = DoubleConv2d(16*features,8*features) #concate, 2*8=16
         
         self.upconv3 = nn.ConvTranspose2d(8*features,4*features,kernel_size=2,stride=2)
-        self.decoder3 = UNet.DoubleConv2d(8*features,4*features) #concate, 2*4=8
+        self.decoder3 = DoubleConv2d(8*features,4*features) #concate, 2*4=8
         
         self.upconv2 = nn.ConvTranspose2d(4*features,2*features,kernel_size=2,stride=2)
-        self.decoder2 = UNet.DoubleConv2d(4*features,2*features) #concate, 2*2=4
+        self.decoder2 = DoubleConv2d(4*features,2*features) #concate, 2*2=4
         
         
         self.upconv1 = nn.ConvTranspose2d(2*features,features,kernel_size=2,stride=2)
-        self.decoder1 = UNet.DoubleConv2d(2*features,features) #concate, 2*1=2
+        self.decoder1 = DoubleConv2d(2*features,features) #concate, 2*1=2
         
         self.conv_out = nn.Conv2d(features, 1, 1)
         
@@ -298,12 +308,12 @@ class UNet_OF(nn.Module):
         
         return output
     
-    def DoubleConv2d(in_channels,features):
-        return nn.Sequential(
-                nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(features, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
-                nn.ReLU(inplace=True)
-        )
+    # def DoubleConv2d(in_channels,features):
+    #     return nn.Sequential(
+    #             nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
+    #             nn.BatchNorm2d(features),
+    #             nn.ReLU(inplace=True),
+    #             nn.Conv2d(features, features, kernel_size=3, padding=1),
+    #             nn.BatchNorm2d(features),
+    #             nn.ReLU(inplace=True)
+    #     )
