@@ -1,7 +1,0 @@
-#Request: ultrasound 2D image, worldToImage transform
-sensor_msgs/Image image
-geometry_msgs/Transform worldToImage
-
----
-#Response: array of 3D points of vessels centerlines locations
-geometry_msgs/Point[] centerpoints

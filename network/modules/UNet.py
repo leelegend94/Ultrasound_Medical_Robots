@@ -243,15 +243,6 @@ class DoubleConv2d(nn.Module):
 
     def forward(self,x):
         return self.block(x)
-# def DoubleConv2d(in_channels,features):
-#         return nn.Sequential(
-#                 nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
-#                 nn.BatchNorm2d(features),
-#                 nn.ReLU(inplace=True),
-#                 nn.Conv2d(features, features, kernel_size=3, padding=1),
-#                 nn.BatchNorm2d(features),
-#                 nn.ReLU(inplace=True)
-#         )
 
 class UNet_OF(nn.Module):
     def __init__(self,in_channels=1,out_channels=1,init_features=64,input_size=256):

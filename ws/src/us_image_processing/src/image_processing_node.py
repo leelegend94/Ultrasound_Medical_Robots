@@ -31,7 +31,7 @@ class ImageBuffer:
 
     def update_image(self,msg):
         tmp = cv2.resize(self.bridge.imgmsg_to_cv2(msg,desired_encoding='mono8'),(256,256),interpolation=cv2.INTER_LANCZOS4)
-        self.img = torch.Tensor((tmp.astype(np.float)/255-0.5)*2).unsqueeze(0).unsqueeze(0) #batch + color 
+        self.img = torch.Tensor((tmp.astype(np.float)/255-0.5)*2).unsqueeze(0).unsqueeze(0) #batch + color
 
     def get_image(self):
         if self.img is None:
@@ -61,6 +61,7 @@ def get_next_mask(label,flow):
         rospy.loginfo(np.max(label))
         rospy.loginfo(np.where(label>0.5))
         return -1
+    #rospy.loginfo(len(rows))
 
     for i in range(len(cols)):
         
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     rospy.loginfo("loading FlowNet2")
     args = FlowNet2Args()
     flownet = models.FlowNet2(args).cuda()
-    flownet.load_state_dict(torch.load('/home/zhenyuli/Downloads/FlowNet2_checkpoint.pth.tar')["state_dict"])
+    flownet.load_state_dict(torch.load(os.path.expanduser('~/Downloads/FlowNet2_checkpoint.pth.tar'))["state_dict"])
     flownet.eval()
 
     rospy.loginfo("Initialization...")
@@ -111,24 +112,30 @@ if __name__ == '__main__':
         pred_cu = unet(img_init_cu, None, mode=0) #None? does it work? Not sure
 
     prev_label = pred_cu.cpu()
-    prev_img_rgb = img_init.repeat(1,3,1,1)
+    prev_img_rgb = img_init.repeat(1,3,1,1,1) #(N,c,n,w,h)
     
     #TODO: init mask pre-processing
 
     while not rospy.is_shutdown():
         img = img_buf.get_image()
-        img_rgb = img.repeat(1,3,1,1)
+        img_rgb = img.repeat(1,3,1,1,1)
 
         im_cu = torch.cat((prev_img_rgb, img_rgb),2).to(device)
-    
+        # rospy.loginfo(torch.max(im_cu[0,0,0,:,:]))
+        # rospy.loginfo(torch.min(im_cu[0,0,0,:,:]))
+        # rospy.loginfo(torch.max(im_cu[0,0,1,:,:]))
+        # rospy.loginfo(torch.min(im_cu[0,0,1,:,:]))
+        # rospy.loginfo(im_cu.shape)
         with torch.no_grad():
             flow_cu = flownet(im_cu)
-
+        rospy.loginfo(torch.max(flow_cu))
+        rospy.loginfo(torch.min(flow_cu))
+        #rospy.loginfo(flow_cu.shape)
         labels_curr_of = np.zeros_like(prev_label)
         flow = np.array(flow_cu.cpu())
 
         img_cu = img.to(device)
-
+        #rospy.loginfo(img.shape)
         result = get_next_mask(prev_label[0,0,...],flow[0,...])
         
         if result is -1:
@@ -136,11 +143,12 @@ if __name__ == '__main__':
             with torch.no_grad():
                 pred_cu = unet(img_cu, None, mode=0)
         else:
-            rospy.loginfo("good")
+            #rospy.loginfo("good")
             labels_curr_of[0,...] = result
             labels_curr_of_cu = torch.Tensor(labels_curr_of).to(device)
             with torch.no_grad():
-                pred_cu = unet(img_cu, labels_curr_of_cu, mode=1)
+                #pred_cu = unet(img_cu, labels_curr_of_cu, mode=1)
+                pred_cu = unet(img_cu, None, mode=0)
         
 
         #pred = np.array(pred_cu.cpu()[0].permute(1, 2, 0))

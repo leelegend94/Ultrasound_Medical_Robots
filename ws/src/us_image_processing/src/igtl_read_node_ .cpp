@@ -20,10 +20,6 @@ private:
 	// Create a message buffer to receive header
 	igtl::MessageHeader::Pointer headerMsg_;
 
-	cv::Mat lookUpTable_;
-	uchar* p_;
-	float gamma_;
-
 	// Allocate a time stamp
 	//igtl::TimeStamp::Pointer ts_;
 
@@ -55,11 +51,9 @@ private:
 		std::memcpy((void *)resultImg8.data, (uint8_t *)image->GetScalarPointer(), image->GetImageSize());
 		// ROS_INFO_STREAM("succeed!");
 
-		cv::Mat img_fixedsize(512,512, resultImg8.type());
-		cv::resize(resultImg8, img_fixedsize, img_fixedsize.size(), 0,0,cv::INTER_CUBIC);
-		
-		cv::LUT(img_fixedsize,lookUpTable_,img_fixedsize);
-
+		cv::Mat img_fixedsize(256,256, resultImg8.type());
+    	cv::resize(resultImg8, img_fixedsize, img_fixedsize.size(), 0,0,cv::INTER_LANCZOS4);
+    	
 		cv_bridge::CvImage cv_img;
 		cv_img.header.stamp = ros::Time::now();
 		cv_img.encoding = "mono8";
@@ -73,8 +67,7 @@ private:
 
 public:
 	IGTL_ROS_Transponder(ros::NodeHandle nh, const std::string& address, const std::string& port):
-	nh_(nh),
-	lookUpTable_(1, 256, CV_8U)
+	nh_(nh)
 	{
 		pub_image = nh_.advertise<sensor_msgs::Image>("/us_image",10);
 
@@ -90,11 +83,7 @@ public:
 		}
 
 		headerMsg_ = igtl::MessageHeader::New();
-		
-		gamma_ = 1.25;
-		p_ = lookUpTable_.ptr();
-		for( int i = 0; i < 256; ++i)
-			p_[i] = cv::saturate_cast<uchar>(pow(i / 255.0, gamma_) * 255.0);
+		//ts_ = igtl::TimeStamp::New();
 	}
 
 	void receive(){
