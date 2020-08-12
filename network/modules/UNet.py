@@ -227,15 +227,31 @@ class UNet3(nn.Module):
                 nn.ReLU(inplace=True)
         )
 
-def DoubleConv2d(in_channels,features):
-        return nn.Sequential(
+class DoubleConv2d(nn.Module):
+    def __init__(self,in_channels,features):
+        super(DoubleConv2d, self).__init__()
+        self.block = nn.Sequential(
                 nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
+                #nn.BatchNorm2d(features),
+                nn.GroupNorm(num_groups=int(features/16), num_channels=features),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(features, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
+                #nn.BatchNorm2d(features),
+                nn.GroupNorm(num_groups=int(features/16), num_channels=features),
                 nn.ReLU(inplace=True)
-        )
+                )
+
+    def forward(self,x):
+        return self.block(x)
+# def DoubleConv2d(in_channels,features):
+#         return nn.Sequential(
+#                 nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
+#                 nn.BatchNorm2d(features),
+#                 nn.ReLU(inplace=True),
+#                 nn.Conv2d(features, features, kernel_size=3, padding=1),
+#                 nn.BatchNorm2d(features),
+#                 nn.ReLU(inplace=True)
+#         )
 
 class UNet_OF(nn.Module):
     def __init__(self,in_channels=1,out_channels=1,init_features=64,input_size=256):
@@ -279,7 +295,8 @@ class UNet_OF(nn.Module):
     def forward(self, input, mask, mode):
         if mode:
             # mode==1: with optical flow attention
-            enc1 = self.encoder1(input)*self.encoder_optfl(mask)
+            tmp = self.encoder1(input)
+            enc1 = tmp*self.encoder_optfl(mask)+tmp
         else:
             # mode==0: normal UNet FP
             enc1 = self.encoder1(input)
