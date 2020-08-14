@@ -91,7 +91,7 @@ public:
 
 		headerMsg_ = igtl::MessageHeader::New();
 		
-		gamma_ = 1.25;
+		gamma_ = 1.2;
 		p_ = lookUpTable_.ptr();
 		for( int i = 0; i < 256; ++i)
 			p_[i] = cv::saturate_cast<uchar>(pow(i / 255.0, gamma_) * 255.0);

@@ -80,7 +80,7 @@ if __name__ == '__main__':
     #init networks
     rospy.loginfo("loading UNet")
     PATH = os.path.expanduser("~/workspace/us_robot/network/unet_of_usseg.pth")
-    unet = UNet_OF(init_features=64).to(device)
+    unet = UNet_OF2(init_features=64).to(device)
     unet.load_state_dict(torch.load(PATH))
     unet.eval()
 
@@ -147,8 +147,8 @@ if __name__ == '__main__':
             labels_curr_of[0,...] = result
             labels_curr_of_cu = torch.Tensor(labels_curr_of).to(device)
             with torch.no_grad():
-                #pred_cu = unet(img_cu, labels_curr_of_cu, mode=1)
-                pred_cu = unet(img_cu, None, mode=0)
+                pred_cu = unet(img_cu, labels_curr_of_cu, mode=1)
+                #pred_cu = unet(img_cu, None, mode=0)
         
 
         #pred = np.array(pred_cu.cpu()[0].permute(1, 2, 0))
