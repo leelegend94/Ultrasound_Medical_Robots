@@ -6,8 +6,6 @@ import torchvision.transforms as transforms
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-from sensor_msgs.msg import PointCloud2
-from sensor_msgs.msg import PointField
 
 import numpy as np
 import os,sys
@@ -44,7 +42,9 @@ class ImageBuffer:
 
     def send_image(self,img):
 
-        
+        img = (img*255).astype(np.uint8)
+
+        _,img = cv2.threshold(img,thresh=127,maxval=255,type=cv2.THRESH_BINARY)
 
         msg = self.bridge.cv2_to_imgmsg(img, encoding="mono8")
         self.pub_img.publish(msg)
@@ -76,8 +76,6 @@ def get_next_mask(label,flow):
 
 if __name__ == '__main__':
     rospy.init_node('image_segmentation')
-
-    pub_pc2 = rospy.Publisher("us_vessel_pointcloud",PointCloud2)
 
     #init networks
     rospy.loginfo("loading UNet")
@@ -118,18 +116,6 @@ if __name__ == '__main__':
     
     #TODO: init mask pre-processing
 
-    # sx = rospy.get_param('/calibration/scaling_x',0.2/256)
-    # sy = rospy.get_param('/calibration/scaling_y',0.2/256)
-    # cx = rospy.get_param('/calibration/c_x', -0.1)
-    # cz = rospy.get_param('/calibration/cz', 0)
-    sx = 0.2/256
-    sy = 0.2/256
-    cx = -0.1
-    cz = 0
-    
-    calibMtx = np.array([[sx,0,cx],[0,0,0],[0,sy,cz]])
-
-
     while not rospy.is_shutdown():
         img = img_buf.get_image()
         img_rgb = img.repeat(1,3,1,1,1)
@@ -160,43 +146,10 @@ if __name__ == '__main__':
                 pred_cu = unet(img_cu, labels_curr_of_cu, mode=1)
                 #pred_cu = unet(img_cu, None, mode=0)
         
+
+        #pred = np.array(pred_cu.cpu()[0].permute(1, 2, 0))
         pred = pred_cu.cpu()
         prev_img_rgb = img_rgb.clone()
         prev_label = np.copy(np.array(pred))
 
-        pred = np.array(pred[0].permute(1, 2, 0))
-        pred = (pred*255).astype(np.uint8)
-        _,pred = cv2.threshold(pred,thresh=127,maxval=255,type=cv2.THRESH_BINARY)
-        img_buf.send_image(pred)
-        rospy.loginfo(pred.shape)
-        #contour extraction
-        try:
-            _,contours,_ = cv2.findContours(pred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-        except:
-            rospy.loginfo("wtf")
-            continue
-        #to point cloud msg
-        edge_points = np.array(contours[0].reshape([-1,2])).astype(np.float).transpose()
-        edge_points = np.concatenate((edge_points, np.ones([1,edge_points.shape[1]])), axis=0)
-        rospy.loginfo(edge_points.shape)
-        edge_points_3d = np.matmul(calibMtx,edge_points)
-        data_array = edge_points_3d.transpose().reshape([-1]).astype(np.float32)
-        rospy.loginfo(len(data_array))
-        msg_pc2 = PointCloud2()
-        msg_pc2.header.frame_id = "iiwa_link_ee"
-        #msg_pc2.header.frame_id = "world"
-        msg_pc2.header.stamp = rospy.Time.now()
-        msg_pc2.height = 1
-        msg_pc2.width = edge_points_3d.shape[1]
-        msg_pc2.is_bigendian = False;
-        msg_pc2.point_step = 12; # 3(x,y,z)*4(byte)
-        msg_pc2.row_step = edge_points_3d.shape[1]*12;
-        msg_pc2.is_dense = False;
-
-        msg_pc2.fields = [PointField('x', 0, PointField.FLOAT32, 1),
-                        PointField('y', 4, PointField.FLOAT32, 1),
-                        PointField('z', 8, PointField.FLOAT32, 1)]
-
-        msg_pc2.data = data_array.tostring()
-        rospy.loginfo(len(msg_pc2.data))
-        pub_pc2.publish(msg_pc2)
+        img_buf.send_image(np.array(pred[0].permute(1, 2, 0)))

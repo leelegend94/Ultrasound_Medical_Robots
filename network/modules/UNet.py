@@ -324,9 +324,9 @@ class AttentionBlock(nn.Module):
         self.conv_att = nn.Conv2d(2*mask_channels, 1, kernel_size=3, padding=1)
     
     def forward(self,dec_input,mask):
-        tmp_dec = self.conv_dec(dec_input)
+        tmp_dec = nn.functional.relu(self.conv_dec(dec_input))
         tmp_mask = torch.cat([tmp_dec,mask],dim=1)
-        att = self.conv_att(tmp_mask)
+        att = torch.sigmoid(self.conv_att(tmp_mask))
 
         output = dec_input*att+dec_input
 
