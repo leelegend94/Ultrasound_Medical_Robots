@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="gui" default="false" />
+	<arg name="type" default="7" />
+
+	<arg name="robot_name" default="iiwa" />
+	<arg name="robot_state_frequency" default="100" />
+	<param name="use_gui" value="$(arg gui)"/>
+
+	<arg name="robot_description" default="robot_description"/>
+
+	<param name="$(arg robot_description)" command="$(find xacro)/xacro --inorder '$(find iiwa_description)/urdf/iiwa$(arg type).urdf.xacro'"/>
+
+<!-- Converts joint states to TF transforms for rviz, etc -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+          respawn="false" output="screen">
+        <remap from="joint_states" to="/$(arg robot_name)/joint_states" />
+        <param name="publish_frequency" value="$(arg robot_state_frequency)" />
+    </node>
+
+    <!--<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />-->
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" />
+
+    <node name="test_node" pkg="test_us_control" type="test_node" output="screen" />
+
+</launch>
