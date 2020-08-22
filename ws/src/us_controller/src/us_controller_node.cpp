@@ -16,6 +16,7 @@
 #include <iiwa_msgs/ControlMode.h>
 #include <iiwa_msgs/ConfigureControlMode.h>
 #include <iiwa_msgs/CartesianImpedanceControlMode.h>
+#include <iiwa_msgs/CartesianPose.h>
 
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
@@ -65,7 +66,12 @@ private:
     /*------------------------------*/
     /*          Call Backs          */
     /*------------------------------*/
+    #ifdef SIM
     void updatePose(const geometry_msgs::PoseStampedConstPtr& msg);
+    #else
+    void updatePose(const iiwa_msgs::CartesianPoseConstPtr& msg);
+    #endif
+
     void updateWrench(const geometry_msgs::WrenchStampedConstPtr& msg);
     void plan(const us_image_processing::VesselState::ConstPtr& msg);
 
@@ -151,7 +157,7 @@ void USController::init_pos(void){
     command.header.frame_id = BASE_LINK;
 
     std::vector<double> init_pose;
-    nh_.param<std::vector<double>>("/init_pose", init_pose, {0.6, 0.1, 0, 0, 1, 0, 0});
+    nh_.param<std::vector<double>>("/init_pose", init_pose, {0.0, -0.5, 0.4, 1, 0, 0, 0});
 
     command.pose.position.x = init_pose[0];
     command.pose.position.y = init_pose[1];
@@ -163,16 +169,24 @@ void USController::init_pos(void){
 
     pub_desiredPose_.publish(command);
     
-    while( (curr_pose.position.x-init_pose[0])+(curr_pose.position.y-init_pose[1])+(curr_pose.position.z-init_pose[2]) > 0.1);
+    while(ros::ok() && (std::abs(curr_pose.position.x-init_pose[0])+std::abs(curr_pose.position.y-init_pose[1])+std::abs(curr_pose.position.z-init_pose[2]) > 0.1)){
+        pub_desiredPose_.publish(command);
+    }
     //while(tf_==ti_);
     
     return;
 }
 
 void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
+    
     tf_ = ros::Time::now();
     //double dt = 1e-9*(tf_.nsec-ti_.nsec);
     double dt = (tf_-ti_).toSec();
+    if(dt>0.2){
+        dt = 0;
+        ROS_WARN_STREAM("too large dt");
+    }
+
     if(!INIT){
         ROS_WARN_STREAM("waiting for initialization");
         ti_ = ros::Time::now();
@@ -244,24 +258,31 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     command.header.seq = msg->header.seq;
     command.pose.position.x = centroid[0] + marching[0];
     command.pose.position.y = centroid[1] + marching[1];
-    command.pose.position.z = 0 + marching[2];
+    command.pose.position.z = centroid[2] + marching[2];
     command.pose.orientation.x = pose_quat.x();
     command.pose.orientation.y = pose_quat.y();
     command.pose.orientation.z = pose_quat.z();
     command.pose.orientation.w = pose_quat.w();
 
+    
     pub_desiredPose_.publish(command);
-
+    
     //centroid_d = centroid;
     ti_ = ros::Time::now();
     return;
 }
 
-
+#ifdef SIM
 void USController::updatePose(const geometry_msgs::PoseStampedConstPtr& msg){
     curr_pose = msg->pose;
     return;
 }
+#else
+void USController::updatePose(const iiwa_msgs::CartesianPoseConstPtr& msg){
+    curr_pose = msg->poseStamped.pose;
+    return;
+}
+#endif
 
 void USController::updateWrench(const geometry_msgs::WrenchStampedConstPtr& msg){
     force_[0] = msg->wrench.force.x;

@@ -34,7 +34,7 @@ public:
 	PointCloudBuffer(ros::NodeHandle nh):
 	nh_(nh),
 	tf_listener(tf_buf),
-	ringBuf(15) //pc2 send at about 15Hz 
+	ringBuf(20) //pc2 send at about 15Hz 
 	{
 		sub_pc2_ = nh_.subscribe("us_vessel_pointcloud", 10, &PointCloudBuffer::update,this);
 	}
@@ -233,7 +233,7 @@ int main(int argc, char** argv){
 		n_ = n;
 
 		tf = ros::Time::now();
-		ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
+		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
 	}
 
 	//ros::waitForShutdown(); //dummy spin

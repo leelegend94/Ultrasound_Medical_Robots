@@ -126,7 +126,7 @@ public:
         command.header.frame_id = BASE_LINK;
 
         std::vector<double> init_pose;
-        nh_.param<std::vector<double>>("/init_pose", init_pose, {0.0, -0.65, 0.45, 1, 0, 0, 0});
+        nh_.param<std::vector<double>>("/init_pose", init_pose, {0.0, -0.5, 0.4, 1, 0, 0, 0});
 
         command.pose.position.x = init_pose[0];
         command.pose.position.y = init_pose[1];

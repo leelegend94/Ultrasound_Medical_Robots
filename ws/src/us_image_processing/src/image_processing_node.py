@@ -188,10 +188,10 @@ if __name__ == '__main__':
         msg_pc2.header.stamp = rospy.Time.now()
         msg_pc2.height = 1
         msg_pc2.width = edge_points_3d.shape[1]
-        msg_pc2.is_bigendian = False;
-        msg_pc2.point_step = 12; # 3(x,y,z)*4(byte)
-        msg_pc2.row_step = edge_points_3d.shape[1]*12;
-        msg_pc2.is_dense = False;
+        msg_pc2.is_bigendian = False
+        msg_pc2.point_step = 12 # 3(x,y,z)*4(byte)
+        msg_pc2.row_step = edge_points_3d.shape[1]*12
+        msg_pc2.is_dense = False
 
         msg_pc2.fields = [PointField('x', 0, PointField.FLOAT32, 1),
                         PointField('y', 4, PointField.FLOAT32, 1),

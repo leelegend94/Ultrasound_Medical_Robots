@@ -1,10 +1,10 @@
-init_pose: [0.6, 0.1, 0, 0, 1, 0, 0] #x y z qx qy qz qw
+init_pose: [0.0, -0.5, 0.4, 1, 0, 0, 0] #x y z qx qy qz qw
 
 controller:
-  cartesian_stiffness: [200,200,200,200,200,200]
-  cartesian_damping: [28,28,28,28,28,28]
+  cartesian_stiffness: [200,200,200,10,10,10]
+  cartesian_damping: [0.5,0.5,0.5,0.2,0.2,0.2]
   nullspace_stiffness: 10
-  nullspace_damping: 0.2
+  nullspace_damping: 0.5
 
 scan:
-  marching_vel: 0.1
+  marching_vel: 0.5
