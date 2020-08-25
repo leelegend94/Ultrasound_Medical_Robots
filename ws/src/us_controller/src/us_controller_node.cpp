@@ -157,7 +157,7 @@ void USController::init_pos(void){
     command.header.frame_id = BASE_LINK;
 
     std::vector<double> init_pose;
-    nh_.param<std::vector<double>>("/init_pose", init_pose, {0.0, -0.5, 0.4, 1, 0, 0, 0});
+    nh_.param<std::vector<double>>("/init_pose", init_pose, {0.0, -0.6, 0.4, 1, 0, 0, 0});
 
     command.pose.position.x = init_pose[0];
     command.pose.position.y = init_pose[1];
@@ -247,7 +247,8 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
 
     Eigen::Vector3d marching;
     //marching.setZero();
-    marching = marching_vel_*y_axis*dt;
+    //marching = marching_vel_*y_axis*dt;
+    marching = marching_vel_*y_axis;
     ROS_INFO_STREAM("y: "<<y_axis(0)<<','<<y_axis(1)<<','<<y_axis(2));
     ROS_INFO_STREAM("dt: "<<dt);
     ROS_INFO_STREAM("marching: "<<marching(0)<<','<<marching(1)<<','<<marching(2));

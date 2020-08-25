@@ -173,8 +173,9 @@ int main(int argc, char** argv){
 	Optimizer optim(2);
 
 	ros::Publisher pub_vesselState = nh.advertise<us_image_processing::VesselState>("/vessel_state",10);
+	
 	//debug
-	// ros::Publisher pub_debug_pc2 = nh.advertise<sensor_msgs::PointCloud2>("debug_vessel_pc2_trans",10);
+	ros::Publisher pub_debug_pc2 = nh.advertise<sensor_msgs::PointCloud2>("debug_vessel_pc2_trans",10);
 	//
 
 	//wait until the buffer is full
@@ -209,10 +210,10 @@ int main(int argc, char** argv){
 		pcl::transformPointCloud(vessel_points, vessel_points, transform_cp);
 
 		//debug
-		// sensor_msgs::PointCloud2 msg_debug_pc2;
-		// pcl::toROSMsg(vessel_points, msg_debug_pc2);
-		// msg_debug_pc2.header.frame_id = "iiwa_link_0";
-		// pub_debug_pc2.publish(msg_debug_pc2);
+		sensor_msgs::PointCloud2 msg_debug_pc2;
+		pcl::toROSMsg(vessel_points, msg_debug_pc2);
+		msg_debug_pc2.header.frame_id = "iiwa_link_0";
+		pub_debug_pc2.publish(msg_debug_pc2);
 		//
 
 		optim.set_data(vessel_points, n_);

@@ -1,13 +1,14 @@
 clear
 clc
 
+TOOL_LINK = "";
 VIS_VESSEL = true;
 
 tftree = rostf;
 
 %init
-R = eul2rotm([pi/3,0,-pi/2.2]);
-T = [0.0; -0.5; 0.3];
+R = eul2rotm([pi/10,0,-pi/2.2]);
+T = [0.6; 0; 0.08];
 Hvw = [R T; 0 0 0 1];
 
 Hdw_init = [-1 0  0  T(1);
@@ -102,7 +103,7 @@ t = 0;
 reset(r);
 while(1)
 tic
-transform = getTransform(tftree,'world','iiwa_link_ee');
+transform = getTransform(tftree,'iiwa_link_0','iiwa_link_ee');
 T = [transform.Transform.Translation.X;transform.Transform.Translation.Y;transform.Transform.Translation.Z];
 quat = transform.Transform.Rotation;
 R = quat2rotm([quat.W quat.X quat.Y quat.Z]);

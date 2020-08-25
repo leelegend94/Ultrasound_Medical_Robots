@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="type" default="7" />
+
+    <!-- The name of the parameter under which the URDF is loaded -->
+    <!-- <arg name="robot_description" default="robot_description"/> -->
+
+    <param name="$(arg robot_description)" command="$(find xacro)/xacro --inorder '$(find iiwa_description)/urdf/iiwa$(arg type).urdf.xacro'"/>
+
+    <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+    <node name="translator_node" pkg="test_us_control" type="translator_node" output="screen" />
+
+    <!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find iiwa_description)/rviz/iiwa.rviz" required="true" />-->
+    <node name="rviz" pkg="rviz" type="rviz"/>
+</launch>
+
+
+
