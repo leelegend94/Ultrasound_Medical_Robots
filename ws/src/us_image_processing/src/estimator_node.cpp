@@ -9,11 +9,15 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <eigen3/Eigen/Dense>
+
 #include <boost/circular_buffer.hpp>
 #include <mutex>
 
 #include <nlopt.hpp>
 #include <math.h>
+
+using namespace Eigen;
 
 class PointCloudBuffer{
 private:
@@ -131,6 +135,72 @@ private:
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
 	}
+
+	static double costFunc2_(const std::vector<double> &n, std::vector<double> &grad, void* data){
+		data_struct *data_ptr = reinterpret_cast<data_struct *>(data);
+		double cp1,cp2,cp3,n1,n2,n3,n_d1,n_d2,n_d3;
+
+		int num_pc = data_ptr->pc_ptr->width;
+
+		double a = 0.0;
+
+		grad.assign({0.0, 0.0});
+		double cost = 0;
+
+		n1 = n[0]; n2 = n[1]; n3 = 1;
+		n_d1 = data_ptr->n_d[0];
+		n_d2 = data_ptr->n_d[1];
+		n_d3 = 1;
+		
+		Eigen::VectorXd dist;
+		Eigen::Matrix<double, 2, Dynamic> grad_dist;
+
+		double mu_dist;
+
+		dist.resize(num_pc);
+		grad_dist.resize(2,num_pc);
+
+		for(int i=0; i<num_pc; i++){
+			cp1 = data_ptr->pc_ptr->points[i].x;
+			cp2 = data_ptr->pc_ptr->points[i].y;
+			cp3 = data_ptr->pc_ptr->points[i].z;
+
+			dist(i) = sqrt(pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0));
+
+			grad_dist(0,i) = 1.0/sqrt(pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0))*((cp2*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0)*(-1.0/2.0);
+			grad_dist(1,i) = 1.0/sqrt(pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0))*((cp1*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0)*(-1.0/2.0);
+			
+			// grad[0] += (cp2*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
+			// grad[1] += (cp1*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
+		
+			// cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
+		
+		}
+
+
+		mu_dist = dist.mean();
+		Eigen::Vector2d mu_grad_dist = grad_dist.rowwise().mean();
+
+		for(int i=0; i<num_pc; i++){
+			grad[0] += (dist(i)-mu_dist)*(grad_dist(0,i)-mu_grad_dist(0));
+			grad[1] += (dist(i)-mu_dist)*(grad_dist(1,i)-mu_grad_dist(1));
+		}
+
+		grad[0] *= 2/num_pc;
+		grad[1] *= 2/num_pc;
+
+		grad[0] += n1*2.0-n_d1*2.0;
+		grad[1] += n2*2.0-n_d2*2.0;
+
+		VectorXd centered = dist-mu_dist*VectorXd::Ones(dist.rows());
+		ROS_INFO_STREAM("mean: "<<mu_dist);
+		auto variance = ((centered.adjoint() * centered) / num_pc)(0);
+		ROS_INFO_STREAM("var: "<<variance);
+		cost = variance + pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
+
+		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
+		return cost;
+	}
 public:
 	Optimizer(unsigned dim):
 	opt_(nlopt::LD_SLSQP, dim)
@@ -142,7 +212,7 @@ public:
 	void set_data(pcl::PointCloud<pcl::PointXYZ>& pc, std::vector<double> n_d){
 		data_.pc_ptr = &pc;
 		data_.n_d = n_d;
-		opt_.set_min_objective(costFunc_, &data_);
+		opt_.set_min_objective(costFunc2_, &data_);
 	}
 
 	std::vector<double> optimize(std::vector<double> n_init){

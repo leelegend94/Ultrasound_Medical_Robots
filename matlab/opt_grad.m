@@ -16,8 +16,11 @@ t2_quad = t2.'*t2;
 
 %cost1 = t1_quad;
 
-pd1_n1 = diff(t1_quad,n(1));
-pd1_n2 = diff(t1_quad,n(2));
+% pd1_n1 = diff(t1_quad,n(1));
+% pd1_n2 = diff(t1_quad,n(2));
+
+pd1_n1 = diff(sqrt(t1_quad),n(1));
+pd1_n2 = diff(sqrt(t1_quad),n(2));
 
 pd2_n1 = diff(t2_quad,n(1));
 pd2_n2 = diff(t2_quad,n(2));
@@ -34,3 +37,9 @@ disp("dist gradient: ")
 ccode(grad1)
 disp("change gradient: ")
 ccode(grad2)
+
+% Ver. 2
+% Minimize the variance
+
+mu = ;
+

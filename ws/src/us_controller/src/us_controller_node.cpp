@@ -21,6 +21,8 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
+#define SIM
+
 const std::string BASE_LINK = "iiwa_link_0";
 
 class USController{
