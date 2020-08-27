@@ -128,10 +128,12 @@ private:
 		
 			cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
 		}
-		grad[0] += n1*2.0-n_d1*2.0;
-		grad[1] += n2*2.0-n_d2*2.0;
+		//grad[0] += n1*2.0-n_d1*2.0;
+		//grad[1] += n2*2.0-n_d2*2.0;
 
-		cost += pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
+		ROS_INFO_STREAM("\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]);
+
+		//cost += pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
 	}
@@ -142,7 +144,7 @@ private:
 
 		int num_pc = data_ptr->pc_ptr->width;
 
-		double a = 0.0;
+		//double a = 0.0;
 
 		grad.assign({0.0, 0.0});
 		double cost = 0;
@@ -154,8 +156,6 @@ private:
 		
 		Eigen::VectorXd dist;
 		Eigen::Matrix<double, 2, Dynamic> grad_dist;
-
-		double mu_dist;
 
 		dist.resize(num_pc);
 		grad_dist.resize(2,num_pc);
@@ -177,8 +177,7 @@ private:
 		
 		}
 
-
-		mu_dist = dist.mean();
+		double mu_dist = dist.mean();
 		Eigen::Vector2d mu_grad_dist = grad_dist.rowwise().mean();
 
 		for(int i=0; i<num_pc; i++){
@@ -186,18 +185,20 @@ private:
 			grad[1] += (dist(i)-mu_dist)*(grad_dist(1,i)-mu_grad_dist(1));
 		}
 
+		ROS_INFO_STREAM("grad0: "<<grad[0]<<", grad1: "<<grad[1]);
 		grad[0] *= 2/num_pc;
 		grad[1] *= 2/num_pc;
 
-		grad[0] += n1*2.0-n_d1*2.0;
-		grad[1] += n2*2.0-n_d2*2.0;
+		//grad[0] += n1*2.0-n_d1*2.0;
+		//grad[1] += n2*2.0-n_d2*2.0;
 
 		VectorXd centered = dist-mu_dist*VectorXd::Ones(dist.rows());
-		ROS_INFO_STREAM("mean: "<<mu_dist);
+		//ROS_INFO_STREAM("mean: "<<mu_dist);
+		//ROS_INFO_STREAM("???: "<<(centered.adjoint() * centered)/ num_pc);
 		auto variance = ((centered.adjoint() * centered) / num_pc)(0);
 		ROS_INFO_STREAM("var: "<<variance);
-		cost = variance + pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
-
+		//cost = 1000*variance + pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
+		cost = 1000*variance;
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
 	}
@@ -206,13 +207,13 @@ public:
 	opt_(nlopt::LD_SLSQP, dim)
 	{
 		dim_ = dim;
-		opt_.set_xtol_rel(1e-4);
+		opt_.set_xtol_rel(1e-6);
 	}
 
 	void set_data(pcl::PointCloud<pcl::PointXYZ>& pc, std::vector<double> n_d){
 		data_.pc_ptr = &pc;
 		data_.n_d = n_d;
-		opt_.set_min_objective(costFunc2_, &data_);
+		opt_.set_min_objective(costFunc_, &data_);
 	}
 
 	std::vector<double> optimize(std::vector<double> n_init){
@@ -258,6 +259,7 @@ int main(int argc, char** argv){
 
 	ros::Time ti,tf;
 
+	bool INIT = false;
 	while(ros::ok()){
 		ti = ros::Time::now();
 		pcl::PointCloud<pcl::PointXYZ> vessel_points;
@@ -276,7 +278,7 @@ int main(int argc, char** argv){
 		transform_cp(1,3) = -centroid(1);
 		transform_cp(2,3) = -centroid(2);
 
-		ROS_INFO_STREAM("centroid: "<<centroid(0)<<','<<centroid(1)<<','<<centroid(2));
+		//ROS_INFO_STREAM("centroid: "<<centroid(0)<<','<<centroid(1)<<','<<centroid(2));
 		pcl::transformPointCloud(vessel_points, vessel_points, transform_cp);
 
 		//debug
@@ -299,12 +301,14 @@ int main(int argc, char** argv){
 		msg_vesselState.direction.x = n[0];
 		msg_vesselState.direction.y = n[1];
 		msg_vesselState.direction.z = 1;
-		pub_vesselState.publish(msg_vesselState);
+
+		if(INIT) pub_vesselState.publish(msg_vesselState);
 
 		n_ = n;
 
 		tf = ros::Time::now();
 		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
+		INIT = true;
 	}
 
 	//ros::waitForShutdown(); //dummy spin
