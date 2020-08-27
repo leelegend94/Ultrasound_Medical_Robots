@@ -38,7 +38,7 @@ public:
 	PointCloudBuffer(ros::NodeHandle nh):
 	nh_(nh),
 	tf_listener(tf_buf),
-	ringBuf(20) //pc2 send at about 15Hz 
+	ringBuf(15) //pc2 send at about 15Hz 
 	{
 		sub_pc2_ = nh_.subscribe("us_vessel_pointcloud", 10, &PointCloudBuffer::update,this);
 	}
@@ -125,13 +125,12 @@ private:
 			*/
 			grad[0] += (cp2*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
 			grad[1] += (cp1*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
-		
+
 			cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
 		}
 		//grad[0] += n1*2.0-n_d1*2.0;
 		//grad[1] += n2*2.0-n_d2*2.0;
-
-		ROS_INFO_STREAM("\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]);
+		ROS_INFO_STREAM("\ncurrent n: "<<n1<<", "<<n2<<", 1.0"<<"\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]);
 
 		//cost += pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
@@ -207,7 +206,7 @@ public:
 	opt_(nlopt::LD_SLSQP, dim)
 	{
 		dim_ = dim;
-		opt_.set_xtol_rel(1e-6);
+		opt_.set_xtol_rel(1e-4);
 	}
 
 	void set_data(pcl::PointCloud<pcl::PointXYZ>& pc, std::vector<double> n_d){
@@ -220,12 +219,12 @@ public:
 		double min_cost;
 		try{
 			nlopt::result result = opt_.optimize(n_init, min_cost);
-			ROS_INFO_STREAM("Minimum cost: " << min_cost);
+			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n_init[0]<<", "<<n_init[1]<<", 1.0");
 		}
 		catch (std::exception &e){
-			ROS_ERROR_STREAM("Failed to find solution in optimization problem: " << e.what());
-			ros::shutdown();
-			return {0};
+			ROS_WARN_STREAM("Failed to find solution in optimization problem: " << e.what());
+			//ros::shutdown();
+			//return {0};
 		}
 		return n_init;
 	}
@@ -240,7 +239,6 @@ int main(int argc, char** argv){
 
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
-
 	Optimizer optim(2);
 
 	ros::Publisher pub_vesselState = nh.advertise<us_image_processing::VesselState>("/vessel_state",10);
@@ -252,14 +250,15 @@ int main(int argc, char** argv){
 	//wait until the buffer is full
 	while(node.ringBuf.size() != node.ringBuf.capacity()){
 		ROS_INFO_STREAM("Loading buffer: "<<node.ringBuf.size()<<"/"<<node.ringBuf.capacity());
+		ros::Duration(0.1).sleep();
 	}
 	
-	std::vector<double> n = {-10,10};
-	std::vector<double> n_ = {-10,10};
+	std::vector<double> n = {-0.1,10};
+	std::vector<double> n_ = {-0.1,10};
 
 	ros::Time ti,tf;
 
-	bool INIT = false;
+	bool INIT = true;
 	while(ros::ok()){
 		ti = ros::Time::now();
 		pcl::PointCloud<pcl::PointXYZ> vessel_points;
@@ -281,15 +280,15 @@ int main(int argc, char** argv){
 		//ROS_INFO_STREAM("centroid: "<<centroid(0)<<','<<centroid(1)<<','<<centroid(2));
 		pcl::transformPointCloud(vessel_points, vessel_points, transform_cp);
 
+		optim.set_data(vessel_points, n_);
+		n = optim.optimize(n_);
+
 		//debug
 		sensor_msgs::PointCloud2 msg_debug_pc2;
 		pcl::toROSMsg(vessel_points, msg_debug_pc2);
 		msg_debug_pc2.header.frame_id = "iiwa_link_0";
 		pub_debug_pc2.publish(msg_debug_pc2);
 		//
-
-		optim.set_data(vessel_points, n_);
-		n = optim.optimize(n_);
 
 		//send vessel state
 		us_image_processing::VesselState msg_vesselState;
@@ -309,6 +308,7 @@ int main(int argc, char** argv){
 		tf = ros::Time::now();
 		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
 		INIT = true;
+		ros::shutdown();
 	}
 
 	//ros::waitForShutdown(); //dummy spin
