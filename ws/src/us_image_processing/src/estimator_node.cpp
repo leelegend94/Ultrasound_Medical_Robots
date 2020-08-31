@@ -16,6 +16,7 @@
 
 #include <nlopt.hpp>
 #include <math.h>
+#include <limits>
 
 using namespace Eigen;
 
@@ -47,7 +48,7 @@ public:
 };
 
 void PointCloudBuffer::update(const sensor_msgs::PointCloud2::ConstPtr& msg){
-	ROS_INFO_STREAM("update..");
+	//ROS_INFO_STREAM("update..");
 	//sensor_msgs::PointCloud2 pc_msg_base;
 	pcl::PointCloud< pcl::PointXYZ > pc_ee, pc_base;
 
@@ -117,26 +118,69 @@ private:
 			cp3 = data_ptr->pc_ptr->points[i].z;
 
 			//TODO: optimize this block by using matlab ccode
-			/*
-			grad[0] += (cp2*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
-			grad[1] += (cp1*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
-
-			cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
-			*/
+			//squared dist
 			grad[0] += (cp2*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
 			grad[1] += (cp1*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0-fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0;
 
 			cost += pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0);
 		}
-		//grad[0] += n1*2.0-n_d1*2.0;
-		//grad[1] += n2*2.0-n_d2*2.0;
-		ROS_INFO_STREAM("\ncurrent n: "<<n1<<", "<<n2<<", 1.0"<<"\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]);
+		grad[0] += 0.5*(n1*2.0-n_d1*2.0);
+		grad[1] += 0.5*(n2*2.0-n_d2*2.0);
+		//ROS_INFO_STREAM("\ncurrent n: "<<n1<<", "<<n2<<", 1.0"<<"\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]);
 
-		//cost += pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
+		cost += 0.5*(pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0));
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
 	}
 
+	static double costFunc_cf(const std::vector<double> &x, std::vector<double> &grad, void* data){
+		data_struct *data_ptr = reinterpret_cast<data_struct *>(data);
+		double cp1,cp2,cp3,n1,n2,n3,n_d1,n_d2,n_d3, r, epsilon;
+
+		int num_pc = data_ptr->pc_ptr->width;
+
+		double mu = 1.0;
+
+		grad.assign({0.0, 0.0, 0.0, 0.0});
+		double cost = 0;
+
+		n1 = x[0]; n2 = x[1]; n3 = 1;
+		n_d1 = data_ptr->n_d[0];
+		n_d2 = data_ptr->n_d[1];
+		n_d3 = 1;
+		
+		r = x[2];
+		epsilon = x[3];
+
+		for(int i=0; i<num_pc; i++){
+			cp1 = data_ptr->pc_ptr->points[i].x;
+			cp2 = data_ptr->pc_ptr->points[i].y;
+			cp3 = data_ptr->pc_ptr->points[i].z;
+
+			//TODO: optimize this block by using matlab ccode
+			//cylinder fitting
+			cost += pow(pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r,2.0);
+
+			grad[0] += (pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r)*((cp2*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0)*-2.0;
+			grad[1] += (pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r)*((cp1*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0)*-2.0;
+			grad[2] += r*(pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r)*-4.0;
+		}
+
+		grad[0] /=  num_pc;
+		grad[1] /=  num_pc;
+		grad[2] /=  num_pc;
+		grad[3] = 2*mu*epsilon;
+
+		cost += pow(epsilon,2.0);
+		//grad[0] += 0.5*(n1*2.0-n_d1*2.0);
+		//grad[1] += 0.5*(n2*2.0-n_d2*2.0);
+		//ROS_INFO_STREAM("\ncurrent x: "<<n1<<", "<<n2<<", "<<r<<"\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]<<", grad2: "<<grad[2]);
+		//std::cout<<"total: "<< num_pc <<std::endl;
+		//cost += 0.5*(pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0));
+		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
+		return cost;
+	}
+/*
 	static double costFunc2_(const std::vector<double> &n, std::vector<double> &grad, void* data){
 		data_struct *data_ptr = reinterpret_cast<data_struct *>(data);
 		double cp1,cp2,cp3,n1,n2,n3,n_d1,n_d2,n_d3;
@@ -197,35 +241,53 @@ private:
 		auto variance = ((centered.adjoint() * centered) / num_pc)(0);
 		ROS_INFO_STREAM("var: "<<variance);
 		//cost = 1000*variance + pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0);
-		cost = 1000*variance;
+		cost = 1000000*variance;
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
+	}
+	*/
+	static double fcons(const std::vector<double> &x, std::vector<double> &grad, void* data){
+		grad[0] = 0; //n1
+		grad[1] = 0; //n2
+		grad[2] = 1.0; //r
+		grad[3] = -1.0; //epsilon
+
+		return x[2] - 0.02 - x[3];
 	}
 public:
 	Optimizer(unsigned dim):
 	opt_(nlopt::LD_SLSQP, dim)
 	{
 		dim_ = dim;
-		opt_.set_xtol_rel(1e-4);
+		opt_.set_xtol_rel(1e-12);
+		opt_.add_inequality_constraint(fcons, NULL, 1e-10);
+
+		float MAX_VAL = std::numeric_limits<float>::max();
+		//float MIN_VAL = std::numeric_limits<float>::min();
+
+		opt_.set_lower_bounds({-MAX_VAL, -MAX_VAL, 0.0, 0.0}); //(n1,n2,r,epsilon)
 	}
 
 	void set_data(pcl::PointCloud<pcl::PointXYZ>& pc, std::vector<double> n_d){
 		data_.pc_ptr = &pc;
 		data_.n_d = n_d;
-		opt_.set_min_objective(costFunc_, &data_);
+		opt_.set_min_objective(costFunc_cf, &data_);
 	}
 
 	std::vector<double> optimize(std::vector<double> n_init){
 		double min_cost;
 		try{
 			nlopt::result result = opt_.optimize(n_init, min_cost);
-			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n_init[0]<<", "<<n_init[1]<<", 1.0");
+			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n_init[0]<<", "<<n_init[1]<<", 1.0 r = "<<n_init[2]<<"\nepsilon = "<<n_init[3]);
 		}
 		catch (std::exception &e){
 			ROS_WARN_STREAM("Failed to find solution in optimization problem: " << e.what());
 			//ros::shutdown();
 			//return {0};
 		}
+
+		if(min_cost>1.0) throw "MSE too large, optimization failed.";
+
 		return n_init;
 	}
 
@@ -239,7 +301,8 @@ int main(int argc, char** argv){
 
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
-	Optimizer optim(2);
+	// Optimizer optim(2);
+	Optimizer optim(4);
 
 	ros::Publisher pub_vesselState = nh.advertise<us_image_processing::VesselState>("/vessel_state",10);
 	
@@ -253,8 +316,10 @@ int main(int argc, char** argv){
 		ros::Duration(0.1).sleep();
 	}
 	
-	std::vector<double> n = {-0.1,10};
-	std::vector<double> n_ = {-0.1,10};
+	// std::vector<double> n = {-10,10};
+	// std::vector<double> n_ = {-10,10};
+	std::vector<double> n = {-10,10,0.015,1e-10};
+	std::vector<double> n_ = {-10,10,0.015,1e-10};
 
 	ros::Time ti,tf;
 
@@ -281,7 +346,22 @@ int main(int argc, char** argv){
 		pcl::transformPointCloud(vessel_points, vessel_points, transform_cp);
 
 		optim.set_data(vessel_points, n_);
-		n = optim.optimize(n_);
+
+		try{
+			n = optim.optimize(n_);
+		}catch(const char* msg){
+			std::cout << msg << std::endl;
+			n = {-10,10,0.015,1e-10};
+			n_ = {-10,10,0.015,1e-10};
+			std::cout << "reset!" << std::endl;
+		}
+		
+
+		// if(n[1]<0){
+		// 	n[0] = -n[0];
+		// 	n[1] = -n[1];
+		// 	n[2] = -n[2];
+		// }
 
 		//debug
 		sensor_msgs::PointCloud2 msg_debug_pc2;
@@ -308,7 +388,7 @@ int main(int argc, char** argv){
 		tf = ros::Time::now();
 		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
 		INIT = true;
-		ros::shutdown();
+		//ros::shutdown();
 	}
 
 	//ros::waitForShutdown(); //dummy spin

@@ -7,7 +7,7 @@ VIS_VESSEL = true;
 tftree = rostf;
 
 %init
-R = eul2rotm([0,0,-pi/2]);
+R = eul2rotm([0.0,0,-pi/2]);
 T = [0.6; 0; 0.08];
 Hvw = [R T; 0 0 0 1];
 
@@ -125,8 +125,9 @@ if(VIS_VESSEL)
     send(pub_pc,msg_PC2);
 end
 
-send(pub_vessel_pc,msg_vessel_pc2);
-
+if(msg_vessel_pc2.Width>1)
+    send(pub_vessel_pc,msg_vessel_pc2);
+end
 dt = toc;
 %fprintf(repmat('\b',1,19)); 
 %fprintf("update rate: %2.2f\n",1/dt);

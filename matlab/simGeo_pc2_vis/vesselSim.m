@@ -46,7 +46,7 @@ end
 
 %transform all vesssel 3d points to detector frame 
 P_d = Hdw\[reshape(Xc,1,[]);reshape(Yc,1,[]);reshape(Zc,1,[]);ones(1,numel(Xc))];
-validPoint_ = P_d(1:3,abs(P_d(2,:))<=1e-3);
+validPoint_ = P_d(1:3,abs(P_d(2,:))<=4e-3);
 
 % validPoint(1,:) = round(validPoint_(1,:)/width*px_width);
 % validPoint(2,:) = round(validPoint_(2,:)/depth*px_depth);

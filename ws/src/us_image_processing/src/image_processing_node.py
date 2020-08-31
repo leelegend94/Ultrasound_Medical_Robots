@@ -41,6 +41,7 @@ class ImageBuffer:
             return -1
         else:
             return self.img
+            #TODO: return time stamp to avoid inaccurate tf
 
     def send_image(self,img):
 

@@ -1,7 +1,7 @@
 clear
 clc
 
-syms n1 n2 n_d1 n_d2 a real
+syms n1 n2 n_d1 n_d2 r real
 syms cp [3,1] real
 
 n = sym([n1;n2;1]);
@@ -39,4 +39,9 @@ disp("change gradient: ")
 ccode(grad2)
 
 % Ver. 2
-% Minimize the variance
+% Cylinder Fitting
+se = (t1_quad-r^2)^2; %squared error
+pse_n1 = diff(se,n(1));
+pse_n2 = diff(se,n(2));
+pse_r = diff(se,r);
+
