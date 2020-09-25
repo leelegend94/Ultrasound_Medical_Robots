@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   interactive_markers
   iiwa_msgs
   geometry_msgs
+  rosgraph_msgs
   roscpp
   tf
 )

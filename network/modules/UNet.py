@@ -1,37 +1,55 @@
 import torch
 import torch.nn as nn
 
+class DoubleConv2d(nn.Module):
+    def __init__(self,in_channels,features):
+        super(DoubleConv2d, self).__init__()
+        self.block = nn.Sequential(
+                nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
+                #nn.BatchNorm2d(features),
+                nn.GroupNorm(num_groups=int(features/16), num_channels=features),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(features, features, kernel_size=3, padding=1),
+                #nn.BatchNorm2d(features),
+                nn.GroupNorm(num_groups=int(features/16), num_channels=features),
+                nn.ReLU(inplace=True)
+                )
+
+    def forward(self,x):
+        return self.block(x)
+
 class UNet(nn.Module):
+    #original UNet
     def __init__(self,in_channels=1,out_channels=1,init_features=64):
         super(UNet, self).__init__()
 
         features = init_features
-        self.encoder1 = UNet.DoubleConv2d(in_channels,features)
+        self.encoder1 = DoubleConv2d(in_channels,features)
         self.pool1 = nn.MaxPool2d(2, 2)
         
-        self.encoder2 = UNet.DoubleConv2d(features,2*features)
+        self.encoder2 = DoubleConv2d(features,2*features)
         self.pool2 = nn.MaxPool2d(2, 2)
 
-        self.encoder3 = UNet.DoubleConv2d(2*features,4*features)
+        self.encoder3 = DoubleConv2d(2*features,4*features)
         self.pool3 = nn.MaxPool2d(2, 2)
         
-        self.encoder4 = UNet.DoubleConv2d(4*features,8*features)
+        self.encoder4 = DoubleConv2d(4*features,8*features)
         self.pool4 = nn.MaxPool2d(2, 2)
         
-        self.bottleneck = UNet.DoubleConv2d(8*features,16*features)
+        self.bottleneck = DoubleConv2d(8*features,16*features)
         
         self.upconv4 = nn.ConvTranspose2d(16*features,8*features,kernel_size=2,stride=2)        
-        self.decoder4 = UNet.DoubleConv2d(16*features,8*features) #concate, 2*8=16
+        self.decoder4 = DoubleConv2d(16*features,8*features) #concate, 2*8=16
         
         self.upconv3 = nn.ConvTranspose2d(8*features,4*features,kernel_size=2,stride=2)
-        self.decoder3 = UNet.DoubleConv2d(8*features,4*features) #concate, 2*4=8
+        self.decoder3 = DoubleConv2d(8*features,4*features) #concate, 2*4=8
         
         self.upconv2 = nn.ConvTranspose2d(4*features,2*features,kernel_size=2,stride=2)
-        self.decoder2 = UNet.DoubleConv2d(4*features,2*features) #concate, 2*2=4
+        self.decoder2 = DoubleConv2d(4*features,2*features) #concate, 2*2=4
         
         
         self.upconv1 = nn.ConvTranspose2d(2*features,features,kernel_size=2,stride=2)
-        self.decoder1 = UNet.DoubleConv2d(2*features,features) #concate, 2*1=2
+        self.decoder1 = DoubleConv2d(2*features,features) #concate, 2*1=2
         
         self.conv_out = nn.Conv2d(features, 1, 1)
         
@@ -61,48 +79,38 @@ class UNet(nn.Module):
         output = torch.sigmoid(self.conv_out(dec1))
         
         return output
-    
-    def DoubleConv2d(in_channels,features):
-        return nn.Sequential(
-                nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(features, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
-                nn.ReLU(inplace=True)
-        )
 
 class UNet2(nn.Module):
+    #UNet with 1*5+5*1 conv kernel
     def __init__(self,in_channels=1,out_channels=1,init_features=64):
         super(UNet2, self).__init__()
 
         features = init_features
-        self.encoder1 = UNet.DoubleConv2d(in_channels,features)
+        self.encoder1 = UNet2.DoubleConv2d(in_channels,features)
         self.pool1 = nn.MaxPool2d(2, 2)
         
-        self.encoder2 = UNet.DoubleConv2d(features,2*features)
+        self.encoder2 = UNet2.DoubleConv2d(features,2*features)
         self.pool2 = nn.MaxPool2d(2, 2)
 
-        self.encoder3 = UNet.DoubleConv2d(2*features,4*features)
+        self.encoder3 = UNet2.DoubleConv2d(2*features,4*features)
         self.pool3 = nn.MaxPool2d(2, 2)
         
-        self.encoder4 = UNet.DoubleConv2d(4*features,8*features)
+        self.encoder4 = UNet2.DoubleConv2d(4*features,8*features)
         self.pool4 = nn.MaxPool2d(2, 2)
         
-        self.bottleneck = UNet.DoubleConv2d(8*features,16*features)
+        self.bottleneck = UNet2.DoubleConv2d(8*features,16*features)
         
         self.upconv4 = nn.ConvTranspose2d(16*features,8*features,kernel_size=2,stride=2)        
-        self.decoder4 = UNet.DoubleConv2d(16*features,8*features) #concate, 2*8=16
+        self.decoder4 = UNet2.DoubleConv2d(16*features,8*features) #concate, 2*8=16
         
         self.upconv3 = nn.ConvTranspose2d(8*features,4*features,kernel_size=2,stride=2)
-        self.decoder3 = UNet.DoubleConv2d(8*features,4*features) #concate, 2*4=8
+        self.decoder3 = UNet2.DoubleConv2d(8*features,4*features) #concate, 2*4=8
         
         self.upconv2 = nn.ConvTranspose2d(4*features,2*features,kernel_size=2,stride=2)
-        self.decoder2 = UNet.DoubleConv2d(4*features,2*features) #concate, 2*2=4
-        
+        self.decoder2 = UNet2.DoubleConv2d(4*features,2*features) #concate, 2*2=4
         
         self.upconv1 = nn.ConvTranspose2d(2*features,features,kernel_size=2,stride=2)
-        self.decoder1 = UNet.DoubleConv2d(2*features,features) #concate, 2*1=2
+        self.decoder1 = UNet2.DoubleConv2d(2*features,features) #concate, 2*1=2
         
         self.conv_out = nn.Conv2d(features, 1, 1)
         
@@ -144,23 +152,24 @@ class UNet2(nn.Module):
         )
 
 class UNet3(nn.Module):
+    #fc for attention
     def __init__(self,in_channels=1,out_channels=1,init_features=64,input_size=256):
         super(UNet3, self).__init__()
 
         features = init_features
-        self.encoder1 = UNet.DoubleConv2d(in_channels,features)
+        self.encoder1 = DoubleConv2d(in_channels,features)
         self.pool1 = nn.MaxPool2d(2, 2)
         
-        self.encoder2 = UNet.DoubleConv2d(features,2*features)
+        self.encoder2 = DoubleConv2d(features,2*features)
         self.pool2 = nn.MaxPool2d(2, 2)
 
-        self.encoder3 = UNet.DoubleConv2d(2*features,4*features)
+        self.encoder3 = DoubleConv2d(2*features,4*features)
         self.pool3 = nn.MaxPool2d(2, 2)
         
-        self.encoder4 = UNet.DoubleConv2d(4*features,8*features)
+        self.encoder4 = DoubleConv2d(4*features,8*features)
         self.pool4 = nn.MaxPool2d(2, 2)
         
-        self.bottleneck = UNet.DoubleConv2d(8*features,16*features)
+        self.bottleneck = DoubleConv2d(8*features,16*features)
         self.fc = nn.Sequential(nn.Conv2d(16*features, 1, kernel_size=1),
         							nn.ReLU(inplace=True),
         							nn.Flatten(),
@@ -173,17 +182,17 @@ class UNet3(nn.Module):
         							)
         
         self.upconv4 = nn.ConvTranspose2d(16*features+1,8*features,kernel_size=2,stride=2)        
-        self.decoder4 = UNet.DoubleConv2d(16*features,8*features) #concate, 2*8=16
+        self.decoder4 = DoubleConv2d(16*features,8*features) #concate, 2*8=16
         
         self.upconv3 = nn.ConvTranspose2d(8*features,4*features,kernel_size=2,stride=2)
-        self.decoder3 = UNet.DoubleConv2d(8*features,4*features) #concate, 2*4=8
+        self.decoder3 = DoubleConv2d(8*features,4*features) #concate, 2*4=8
         
         self.upconv2 = nn.ConvTranspose2d(4*features,2*features,kernel_size=2,stride=2)
-        self.decoder2 = UNet.DoubleConv2d(4*features,2*features) #concate, 2*2=4
+        self.decoder2 = DoubleConv2d(4*features,2*features) #concate, 2*2=4
         
         
         self.upconv1 = nn.ConvTranspose2d(2*features,features,kernel_size=2,stride=2)
-        self.decoder1 = UNet.DoubleConv2d(2*features,features) #concate, 2*1=2
+        self.decoder1 = DoubleConv2d(2*features,features) #concate, 2*1=2
         
         self.conv_out = nn.Conv2d(features, 1, 1)
         
@@ -217,34 +226,11 @@ class UNet3(nn.Module):
         
         return output
     
-    def DoubleConv2d(in_channels,features):
-        return nn.Sequential(
-                nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(features, features, kernel_size=3, padding=1),
-                nn.BatchNorm2d(features),
-                nn.ReLU(inplace=True)
-        )
 
-class DoubleConv2d(nn.Module):
-    def __init__(self,in_channels,features):
-        super(DoubleConv2d, self).__init__()
-        self.block = nn.Sequential(
-                nn.Conv2d(in_channels, features, kernel_size=3, padding=1),
-                #nn.BatchNorm2d(features),
-                nn.GroupNorm(num_groups=int(features/16), num_channels=features),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(features, features, kernel_size=3, padding=1),
-                #nn.BatchNorm2d(features),
-                nn.GroupNorm(num_groups=int(features/16), num_channels=features),
-                nn.ReLU(inplace=True)
-                )
 
-    def forward(self,x):
-        return self.block(x)
 
 class UNet_OF(nn.Module):
+    #simplest optical attention
     def __init__(self,in_channels=1,out_channels=1,init_features=64,input_size=256):
         super(UNet_OF, self).__init__()
 
@@ -345,6 +331,7 @@ class ConvDownsampling(nn.Module):
         return self.block(input)
 
 class UNet_OF2(nn.Module):
+    #attention layers
     def __init__(self,in_channels=1,out_channels=1,init_features=64,mask_channels=16):
         super(UNet_OF2, self).__init__()
 

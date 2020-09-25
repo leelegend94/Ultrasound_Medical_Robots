@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     #init networks
     rospy.loginfo("loading UNet")
-    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_of_usseg.pth")
+    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_of_usseg_phantom.pth")
     unet = UNet_OF2(init_features=64).to(device)
     unet.load_state_dict(torch.load(PATH))
     unet.eval()
@@ -119,17 +119,16 @@ if __name__ == '__main__':
     
     #TODO: init mask pre-processing
 
-    # sx = rospy.get_param('/calibration/scaling_x',0.2/256)
-    # sy = rospy.get_param('/calibration/scaling_y',0.2/256)
-    # cx = rospy.get_param('/calibration/c_x', -0.1)
-    # cz = rospy.get_param('/calibration/cz', 0)
-    sx = 0.2/256
-    sy = 0.2/256
-    cx = -0.1
-    cz = 0
+    sx = rospy.get_param('/calibration/scaling_x',1.4648e-4)
+    sy = rospy.get_param('/calibration/scaling_y',1.5625e-4)
+    cx = rospy.get_param('/calibration/c_x', -0.01875)
+    cz = rospy.get_param('/calibration/cz', 0)
+    # sx = 0.2/256
+    # sy = 0.2/256
+    # cx = -0.1
+    # cz = 0
     
     calibMtx = np.array([[sx,0,cx],[0,0,0],[0,sy,cz]])
-
 
     while not rospy.is_shutdown():
         img = img_buf.get_image()
@@ -139,8 +138,8 @@ if __name__ == '__main__':
 
         with torch.no_grad():
             flow_cu = flownet(im_cu)
-        rospy.loginfo("max: %.3f" %(torch.max(flow_cu).item()))
-        rospy.loginfo("min: %.3f" %(torch.min(flow_cu).item()))
+        #rospy.loginfo("max: %.3f" %(torch.max(flow_cu).item()))
+        #rospy.loginfo("min: %.3f" %(torch.min(flow_cu).item()))
         #rospy.loginfo(flow_cu.shape)
         labels_curr_of = np.zeros_like(prev_label)
         flow = np.array(flow_cu.cpu())
@@ -169,22 +168,23 @@ if __name__ == '__main__':
         pred = (pred*255).astype(np.uint8)
         _,pred = cv2.threshold(pred,thresh=127,maxval=255,type=cv2.THRESH_BINARY)
         img_buf.send_image(pred)
-        rospy.loginfo(pred.shape)
+        #rospy.loginfo(pred.shape)
+
         #contour extraction
         try:
             _,contours,_ = cv2.findContours(pred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         except:
-            rospy.loginfo("wtf")
+            #rospy.loginfo("wtf")
             continue
         #to point cloud msg
         edge_points = np.array(contours[0].reshape([-1,2])).astype(np.float).transpose()
         edge_points = np.concatenate((edge_points, np.ones([1,edge_points.shape[1]])), axis=0)
-        rospy.loginfo(edge_points.shape)
+        #rospy.loginfo(edge_points.shape)
         edge_points_3d = np.matmul(calibMtx,edge_points)
         data_array = edge_points_3d.transpose().reshape([-1]).astype(np.float32)
-        rospy.loginfo(len(data_array))
+        #rospy.loginfo(len(data_array))
         msg_pc2 = PointCloud2()
-        msg_pc2.header.frame_id = "iiwa_link_ee"
+        msg_pc2.header.frame_id = "cephalinear_link_ee"
         #msg_pc2.header.frame_id = "world"
         msg_pc2.header.stamp = rospy.Time.now()
         msg_pc2.height = 1

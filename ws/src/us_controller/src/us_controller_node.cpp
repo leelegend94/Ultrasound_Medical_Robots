@@ -21,9 +21,10 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-#define SIM
+//#define SIM
 
 const std::string BASE_LINK = "iiwa_link_0";
+const std::string EE_LINK = "cephalinear_link_ee";
 
 class USController{
 private:
@@ -106,7 +107,7 @@ public:
 
         sub_eePose_ = nh_.subscribe("/iiwa/state/CartesianPose",10,&USController::updatePose,this);
         sub_eeFT_ = nh_.subscribe("/iiwa/state/CartesianWrench",10,&USController::updateWrench,this);
-        pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose",10);
+        pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose_debug",10);
         sub_vesselState_ = nh_.subscribe("/vessel_state",10,&USController::plan,this);
         
         srv_start_ = nh_.advertiseService("/start", &USController::scan_init, this);
@@ -198,7 +199,7 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     Eigen::Vector3d n, centroid; //vessel axial vector, centroid of the vessel in the current image wrt base_link
     
     try{
-        Te0 = tf_buf.lookupTransform("iiwa_link_0", "iiwa_link_ee", ros::Time(0));
+        Te0 = tf_buf.lookupTransform(BASE_LINK, EE_LINK, ros::Time(0));
         Te0_vct = Te0;
         Te0_vct.transform.translation.x=0;
         Te0_vct.transform.translation.y=0;
@@ -212,7 +213,7 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     /*
     centroid << msg->pose.x, 0.0, msg->pose.y;
     //centroid = Te0*centroid;
-    tf2::Stamped<Eigen::Vector3d> stampedCentroid(centroid,ros::Time(),"iiwa_link_ee");
+    tf2::Stamped<Eigen::Vector3d> stampedCentroid(centroid,ros::Time(),EE_LINK);
     tf2::doTransform(stampedCentroid, stampedCentroid, Te0);
     //debug
     geometry_msgs::PointStamped msg_debug_centroid;
@@ -233,7 +234,7 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
 
     Eigen::Vector3d x_axis,y_axis,z_axis;
     z_axis << 0.0, 0.0, 1.0; // z_ef_
-    tf2::Stamped<Eigen::Vector3d> stampedZ(z_axis,ros::Time(),"iiwa_link_ee");
+    tf2::Stamped<Eigen::Vector3d> stampedZ(z_axis,ros::Time(),EE_LINK);
 
     tf2::doTransform(stampedZ, stampedZ, Te0_vct);
     stampedZ.normalize(); //z_0_

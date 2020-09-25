@@ -1,21 +1,25 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="gui" default="true" />
     <arg name="type" default="7" />
+    <arg name="tool_name" default="cephalinear"/>
+    <arg name="use_sim_time" default="false" />
 
     <!-- The name of the parameter under which the URDF is loaded -->
     <arg name="robot_description" default="robot_description"/>
+    <arg name="hardware_interface" default="PositionJointInterface"/>
+    <arg name="robot_name" default="iiwa"/>
+    <!-- <param name="$(arg robot_description)" command="$(find xacro)/xacro '$(find iiwa_description)/urdf/iiwa$(arg type).urdf.xacro'"/> -->
 
-    <param name="$(arg robot_description)" command="$(find xacro)/xacro --inorder '$(find iiwa_description)/urdf/iiwa$(arg type).urdf.xacro'"/>
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find iiwa_cepha_description)/urdf/iiwa_cepha.urdf.xacro' hardware_interface:=$(arg hardware_interface) robot_name:=$(arg robot_name)" />
 
-    <!--<param name="robot_description" command="cat $(find iiwa_description)/urdf/rppr_robot.urdf" />-->
+    <param name="/iiwa/toolName" type="string" value="$(arg tool_name)" /> 
 
-    <param name="use_gui" value="$(arg gui)"/>
-
-    <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" />
+    <param name="/use_sim_time" type="bool" value="$(arg use_sim_time)" />
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    
+    <node name="translator_node" pkg="test_us_control" type="translator_node" output="screen" />
 
     <!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find iiwa_description)/rviz/iiwa.rviz" required="true" />-->
-    <node name="rviz" pkg="rviz" type="rviz"/>
+    <!-- <node name="rviz" pkg="rviz" type="rviz"/> -->
 </launch>

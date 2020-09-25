@@ -18,6 +18,8 @@
 #include <math.h>
 #include <limits>
 
+const double PC_SCALING = 100;
+
 using namespace Eigen;
 
 class PointCloudBuffer{
@@ -252,15 +254,15 @@ private:
 		grad[2] = 1.0; //r
 		grad[3] = -1.0; //epsilon
 
-		return x[2] - 0.02 - x[3];
+		return x[2] - 0.02*PC_SCALING - x[3];
 	}
 public:
 	Optimizer(unsigned dim):
 	opt_(nlopt::LD_SLSQP, dim)
 	{
 		dim_ = dim;
-		opt_.set_xtol_rel(1e-12);
-		opt_.add_inequality_constraint(fcons, NULL, 1e-10);
+		opt_.set_xtol_rel(1e-6);
+		opt_.add_inequality_constraint(fcons, NULL, 1e-6);
 
 		float MAX_VAL = std::numeric_limits<float>::max();
 		//float MIN_VAL = std::numeric_limits<float>::min();
@@ -286,12 +288,20 @@ public:
 			//return {0};
 		}
 
-		if(min_cost>1.0) throw "MSE too large, optimization failed.";
+		if(min_cost>100) throw "MSE too large, optimization failed.";
 
 		return n_init;
 	}
 
 };
+
+void rescaling(std::vector<double> &n){
+	double length = sqrt(pow(n[0],2.0)+pow(n[1],2.0));
+	double factor = 100/(1+std::exp(- length ));
+	n[0] = n[0]/length*factor;
+	n[1] = n[1]/length*factor;
+	return;
+}
 
 int main(int argc, char** argv){
 	ros::init(argc, argv, "estimator");
@@ -341,9 +351,16 @@ int main(int argc, char** argv){
 		transform_cp(0,3) = -centroid(0);
 		transform_cp(1,3) = -centroid(1);
 		transform_cp(2,3) = -centroid(2);
+		//transform_cp(3,3) = 0.001;
 
 		//ROS_INFO_STREAM("centroid: "<<centroid(0)<<','<<centroid(1)<<','<<centroid(2));
 		pcl::transformPointCloud(vessel_points, vessel_points, transform_cp);
+
+		for (int i = 0; i < vessel_points.points.size(); i++)
+		{
+		    pcl::PointXYZ pt = vessel_points.points[i];
+			vessel_points.points[i] = pcl::PointXYZ(pt.x * PC_SCALING, pt.y * PC_SCALING, pt.z * PC_SCALING);
+		}
 
 		optim.set_data(vessel_points, n_);
 
@@ -384,6 +401,9 @@ int main(int argc, char** argv){
 		if(INIT) pub_vesselState.publish(msg_vesselState);
 
 		n_ = n;
+		std::cout << "!!!" <<n_[0]<< std::endl;
+		rescaling(n_);
+		std::cout << "???" <<n_[0]<< std::endl;
 
 		tf = ros::Time::now();
 		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
