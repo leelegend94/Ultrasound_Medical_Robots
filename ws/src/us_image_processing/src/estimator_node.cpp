@@ -15,10 +15,14 @@
 #include <mutex>
 
 #include <nlopt.hpp>
-#include <math.h>
+#include <math.h> /* tanh, log */
 #include <limits>
+#include <random>
 
 const double PC_SCALING = 100;
+
+const std::string BASE_LINK = "iiwa_link_0";
+const std::string EE_LINK = "cephalinear_link_ee";
 
 using namespace Eigen;
 
@@ -58,7 +62,7 @@ void PointCloudBuffer::update(const sensor_msgs::PointCloud2::ConstPtr& msg){
 	
 	geometry_msgs::TransformStamped Te0;
 	try{
-        Te0 = tf_buf.lookupTransform("iiwa_link_0", "iiwa_link_ee", ros::Time(0));
+        Te0 = tf_buf.lookupTransform(BASE_LINK, EE_LINK, ros::Time(0));
     }
     catch (tf2::TransformException &ex) {
         ROS_WARN("%s",ex.what());
@@ -137,7 +141,7 @@ private:
 
 	static double costFunc_cf(const std::vector<double> &x, std::vector<double> &grad, void* data){
 		data_struct *data_ptr = reinterpret_cast<data_struct *>(data);
-		double cp1,cp2,cp3,n1,n2,n3,n_d1,n_d2,n_d3, r, epsilon;
+		double cp1,cp2,cp3,n1,n2,n3,n_d1,n_d2, r, epsilon;
 
 		int num_pc = data_ptr->pc_ptr->width;
 
@@ -149,9 +153,9 @@ private:
 		n1 = x[0]; n2 = x[1]; n3 = 1;
 		n_d1 = data_ptr->n_d[0];
 		n_d2 = data_ptr->n_d[1];
-		n_d3 = 1;
 		
 		r = x[2];
+		r_d = data_ptr->n_d[2];
 		epsilon = x[3];
 
 		for(int i=0; i<num_pc; i++){
@@ -174,8 +178,8 @@ private:
 		grad[3] = 2*mu*epsilon;
 
 		cost += pow(epsilon,2.0);
-		//grad[0] += 0.5*(n1*2.0-n_d1*2.0);
-		//grad[1] += 0.5*(n2*2.0-n_d2*2.0);
+		grad[0] += 0.5*(n1*2.0-n_d1*2.0);
+		grad[1] += 0.5*(n2*2.0-n_d2*2.0);
 		//ROS_INFO_STREAM("\ncurrent x: "<<n1<<", "<<n2<<", "<<r<<"\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]<<", grad2: "<<grad[2]);
 		//std::cout<<"total: "<< num_pc <<std::endl;
 		//cost += 0.5*(pow(n1-n_d1,2.0)+pow(n2-n_d2,2.0));
@@ -261,7 +265,7 @@ public:
 	opt_(nlopt::LD_SLSQP, dim)
 	{
 		dim_ = dim;
-		opt_.set_xtol_rel(1e-6);
+		opt_.set_xtol_rel(1e-8);
 		opt_.add_inequality_constraint(fcons, NULL, 1e-6);
 
 		float MAX_VAL = std::numeric_limits<float>::max();
@@ -276,11 +280,11 @@ public:
 		opt_.set_min_objective(costFunc_cf, &data_);
 	}
 
-	std::vector<double> optimize(std::vector<double> n_init){
+	void optimize(std::vector<double> &n){
 		double min_cost;
 		try{
-			nlopt::result result = opt_.optimize(n_init, min_cost);
-			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n_init[0]<<", "<<n_init[1]<<", 1.0 r = "<<n_init[2]<<"\nepsilon = "<<n_init[3]);
+			nlopt::result result = opt_.optimize(n, min_cost);
+			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n[0]<<", "<<n[1]<<", 1.0 r = "<<n[2]<<"\nepsilon = "<<n[3]);
 		}
 		catch (std::exception &e){
 			ROS_WARN_STREAM("Failed to find solution in optimization problem: " << e.what());
@@ -290,14 +294,14 @@ public:
 
 		if(min_cost>100) throw "MSE too large, optimization failed.";
 
-		return n_init;
+		return;
 	}
 
 };
 
 void rescaling(std::vector<double> &n){
 	double length = sqrt(pow(n[0],2.0)+pow(n[1],2.0));
-	double factor = 100/(1+std::exp(- length ));
+	double factor = 100*tanh(length);
 	n[0] = n[0]/length*factor;
 	n[1] = n[1]/length*factor;
 	return;
@@ -329,11 +333,15 @@ int main(int argc, char** argv){
 	// std::vector<double> n = {-10,10};
 	// std::vector<double> n_ = {-10,10};
 	std::vector<double> n = {-10,10,0.015,1e-10};
-	std::vector<double> n_ = {-10,10,0.015,1e-10};
+	//std::vector<double> n_ = {-10,10,0.015,1e-10};
 
 	ros::Time ti,tf;
 
 	bool INIT = true;
+
+	std::default_random_engine generator;
+	std::normal_distribution<double> distribution(0.0,5.0);
+
 	while(ros::ok()){
 		ti = ros::Time::now();
 		pcl::PointCloud<pcl::PointXYZ> vessel_points;
@@ -362,18 +370,17 @@ int main(int argc, char** argv){
 			vessel_points.points[i] = pcl::PointXYZ(pt.x * PC_SCALING, pt.y * PC_SCALING, pt.z * PC_SCALING);
 		}
 
-		optim.set_data(vessel_points, n_);
+		optim.set_data(vessel_points, n);
 
 		try{
-			n = optim.optimize(n_);
+			optim.optimize(n);
 		}catch(const char* msg){
 			std::cout << msg << std::endl;
 			n = {-10,10,0.015,1e-10};
-			n_ = {-10,10,0.015,1e-10};
+			//n_ = {-10,10,0.015,1e-10};
 			std::cout << "reset!" << std::endl;
 		}
 		
-
 		// if(n[1]<0){
 		// 	n[0] = -n[0];
 		// 	n[1] = -n[1];
@@ -383,14 +390,14 @@ int main(int argc, char** argv){
 		//debug
 		sensor_msgs::PointCloud2 msg_debug_pc2;
 		pcl::toROSMsg(vessel_points, msg_debug_pc2);
-		msg_debug_pc2.header.frame_id = "iiwa_link_0";
+		msg_debug_pc2.header.frame_id = BASE_LINK;
 		pub_debug_pc2.publish(msg_debug_pc2);
 		//
 
 		//send vessel state
 		us_image_processing::VesselState msg_vesselState;
 		msg_vesselState.header.stamp = ros::Time::now();
-		msg_vesselState.header.frame_id = "iiwa_link_0";
+		msg_vesselState.header.frame_id = BASE_LINK;
 		msg_vesselState.centroid.x = centroid(0);
 		msg_vesselState.centroid.y = centroid(1);
 		msg_vesselState.centroid.z = centroid(2);
@@ -400,10 +407,12 @@ int main(int argc, char** argv){
 
 		if(INIT) pub_vesselState.publish(msg_vesselState);
 
-		n_ = n;
-		std::cout << "!!!" <<n_[0]<< std::endl;
-		rescaling(n_);
-		std::cout << "???" <<n_[0]<< std::endl;
+		//n_ = n;
+		std::cout << "!!!" <<n[0]<< std::endl;
+		rescaling(n);
+		n[0] += distribution(generator);
+		n[1] += distribution(generator);
+		std::cout << "???" <<n[0]<< std::endl;
 
 		tf = ros::Time::now();
 		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");

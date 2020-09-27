@@ -107,7 +107,7 @@ public:
 
         sub_eePose_ = nh_.subscribe("/iiwa/state/CartesianPose",10,&USController::updatePose,this);
         sub_eeFT_ = nh_.subscribe("/iiwa/state/CartesianWrench",10,&USController::updateWrench,this);
-        pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose_debug",10);
+        pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose",10);
         sub_vesselState_ = nh_.subscribe("/vessel_state",10,&USController::plan,this);
         
         srv_start_ = nh_.advertiseService("/start", &USController::scan_init, this);
