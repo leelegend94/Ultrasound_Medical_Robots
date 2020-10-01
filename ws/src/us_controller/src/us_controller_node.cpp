@@ -21,10 +21,15 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-//#define SIM
+#define SIM
 
 const std::string BASE_LINK = "iiwa_link_0";
+
+#ifdef SIM  
+const std::string EE_LINK = "iiwa_link_ee";
+#else
 const std::string EE_LINK = "cephalinear_link_ee";
+#endif
 
 class USController{
 private:
@@ -185,7 +190,7 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     tf_ = ros::Time::now();
     //double dt = 1e-9*(tf_.nsec-ti_.nsec);
     double dt = (tf_-ti_).toSec();
-    if(dt>0.2){
+    if(dt>1){
         dt = 0;
         ROS_WARN_STREAM("too large dt");
     }
