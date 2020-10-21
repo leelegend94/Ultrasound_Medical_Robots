@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package>
+  <name>imf_publisher_plugin</name>
+  <version>0.0.1</version>
+  <description>An empty description</description>
+
+  <license>BSD</license>
+
+  <author email="zhenyu.li@tum.de">Zhenyu Li</author>
+  <maintainer email="zhenyu.li@tum.de">Zhenyu Li</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
