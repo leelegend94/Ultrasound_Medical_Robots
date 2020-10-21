@@ -27,8 +27,7 @@
 
 // #define SIM
 
-const double PC_SCALING = 100; //100
-const double SCREW_FACTOR = 5; //5
+const double PC_SCALING = 100;
 
 const std::string BASE_LINK = "iiwa_link_0";
 
@@ -59,7 +58,7 @@ public:
 	PointCloudBuffer(ros::NodeHandle nh):
 	nh_(nh),
 	tf_listener(tf_buf),
-	ringBuf(10) //pc2 send at about 15Hz 
+	ringBuf(20) //pc2 send at about 15Hz 
 	{
 		sub_pc2_ = nh_.subscribe("us_vessel_pointcloud", 10, &PointCloudBuffer::update,this);
 	}
@@ -203,20 +202,17 @@ private:
 		grad[0] /=  num_pc;
 		grad[1] /=  num_pc;
 
-		//grad[3] = 2*mu*epsilon;
+		grad[3] = 2*mu*epsilon;
 
-		//cost += pow(epsilon,2.0);
+		cost += pow(epsilon,2.0);
 
 		//ROS_INFO_STREAM("\ncurrent x: "<<n1<<", "<<n2<<", "<<r<<"\ngrad0: "<<grad[0]<<", grad1: "<<grad[1]<<", grad2: "<<grad[2]);
 		//std::cout<<"total: "<< num_pc <<std::endl;
 
-		cost += 0.5*(pow(atan(n2/n1)-atan(n_d2/n_d1),2.0)+pow(r-r_d,2.0));
-		double common = (atan(n2/n1)-atan(n_d2/n_d1))/(1+pow(n2/n1,2.0));
-		grad[0] += -common*n2/pow(n1,2.0);
-		grad[1] +=  common/n1;
+		// cost += 0.5*(pow(atan(n2/n1)-atan(n_d2/n_d1),2.0)+pow(r-r_d,2.0));
+		// grad[0] +=  (atan(n2/n1)-atan(n_d2/n_d1))/(1+pow(n2/n1,2.0))/n1;
+		// grad[1] += -(atan(n2/n1)-atan(n_d2/n_d1))/(1+pow(n2/n1,2.0))*n2/pow(n1,2.0);
 
-		grad[2] = 0.0;
-		grad[3] = 0.0;
 		//ROS_INFO_STREAM("grad: "<<grad[0]<<','<<grad[1]);
 		return cost;
 	}
@@ -244,7 +240,7 @@ public:
 		opt_.set_lower_bounds({-MAX_VAL,  0.0, 0.1, 0.0}); //(n1,n2,r,epsilon)
 		opt_.set_upper_bounds({ MAX_VAL,  MAX_VAL, 5.0, 2.0}); //(n1,n2,r,epsilon)
 
-		opt_.set_maxtime(0.5);
+		opt_.set_maxtime(1.0);
 
 		isFix_r = true;
 	}
@@ -269,7 +265,7 @@ public:
 			ROS_INFO_STREAM("freeze n");
 			opt_init_r(pc, n_d);
 		}
-		isFix_r = !isFix_r;
+		//isFix_r = !isFix_r;
 	}
 
 	double optimize(std::vector<double> &n){
@@ -311,7 +307,7 @@ int main(int argc, char** argv){
 	// Optimizer optim(2);
 	Optimizer optim(4);
 
-	ros::Publisher pub_vesselState = nh.advertise<us_image_processing::VesselState>("/vessel_state",10);
+	ros::Publisher pub_vesselState = nh.advertise<us_image_processing::VesselState>("/vessel_state_",10);
 	
 	//debug
 	ros::Publisher pub_debug_pc2 = nh.advertise<sensor_msgs::PointCloud2>("debug_vessel_pc2_trans",10);
@@ -386,43 +382,17 @@ int main(int argc, char** argv){
 		pcl::PointCloud<pcl::PointXYZ> vessel_points;
 		Eigen::Vector4d centroid_curr_pos;
 
-		std::vector<pcl::PointCloud<pcl::PointXYZ>> local_storage;
-
 		node.mtx.lock();
 		for(int i=0;i<node.ringBuf.capacity();i++){
 			vessel_points += node.ringBuf[i];
-			local_storage.push_back(node.ringBuf[i]);
 		}
-		// pcl::compute3DCentroid(node.ringBuf[node.ringBuf.capacity()], centroid_curr_pos);
+		pcl::compute3DCentroid(node.ringBuf[node.ringBuf.capacity()], centroid_curr_pos);
 		node.mtx.unlock();
 
-		//compute the centroid of the latest point cloud
-		pcl::compute3DCentroid(local_storage[local_storage.size()-1], centroid_curr_pos);
-
-		//compute the centroid of the whole vessel section
+		//Transform point cloulds in the buffer to origion.
 		Eigen::Vector4d centroid_buf;
 		pcl::compute3DCentroid(vessel_points, centroid_buf);
 
-		//modify distance
-		Eigen::Vector4d centroid_tmp, corr_vct;
-		Eigen::Matrix4d transform_tmp = Eigen::Matrix4d::Identity();;
-		for(int i=0;i<local_storage.size();i++){
-			pcl::compute3DCentroid(local_storage[i], centroid_tmp);
-
-			corr_vct = centroid_tmp-centroid_buf;
-			transform_tmp(0,3) = SCREW_FACTOR*corr_vct(0);
-			transform_tmp(1,3) = SCREW_FACTOR*corr_vct(1);
-			transform_tmp(2,3) = SCREW_FACTOR*corr_vct(2);
-
-			pcl::transformPointCloud(local_storage[i], local_storage[i], transform_tmp);
-		}
-		
-		vessel_points.clear();
-		for(int i=0;i<local_storage.size();i++){
-			vessel_points += local_storage[i];
-		}
-
-		//Transform point cloulds in the buffer to origion.
 		Eigen::Matrix4d transform_cp = Eigen::Matrix4d::Identity();
 		transform_cp(0,3) = -centroid_buf(0);
 		transform_cp(1,3) = -centroid_buf(1);
@@ -486,8 +456,6 @@ int main(int argc, char** argv){
 		msg_vesselState.direction.x = n[0];
 		msg_vesselState.direction.y = n[1];
 		msg_vesselState.direction.z = 1;
-		msg_vesselState.radius = n[2];
-		msg_vesselState.epsilon = n[3];
 
 		if(INIT) pub_vesselState.publish(msg_vesselState);
 

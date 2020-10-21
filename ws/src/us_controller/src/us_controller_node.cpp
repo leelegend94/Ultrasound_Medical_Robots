@@ -21,7 +21,10 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-#define SIM
+#include <pcl_msgs/ModelCoefficients.h>
+
+// #define SIM
+//#define USE_PCL
 
 const std::string BASE_LINK = "iiwa_link_0";
 
@@ -69,7 +72,7 @@ private:
     bool INIT;
 
     //debug
-    ros::Publisher pub_debug_centroid_;
+    //ros::Publisher pub_debug_centroid_;
     //
     /*------------------------------*/
     /*          Call Backs          */
@@ -81,8 +84,12 @@ private:
     #endif
 
     void updateWrench(const geometry_msgs::WrenchStampedConstPtr& msg);
+    
+#ifndef USE_PCL
     void plan(const us_image_processing::VesselState::ConstPtr& msg);
-
+#else
+    void plan(const pcl_msgs::ModelCoefficients::ConstPtr& msg);
+#endif
     bool scan_init(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res);
 
     /*------------------------------*/
@@ -112,14 +119,18 @@ public:
 
         sub_eePose_ = nh_.subscribe("/iiwa/state/CartesianPose",10,&USController::updatePose,this);
         sub_eeFT_ = nh_.subscribe("/iiwa/state/CartesianWrench",10,&USController::updateWrench,this);
+#ifdef SIM
         pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose",10);
+#else
+        pub_desiredPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/iiwa/command/CartesianPoseLin",10);
+#endif
         sub_vesselState_ = nh_.subscribe("/vessel_state",10,&USController::plan,this);
         
         srv_start_ = nh_.advertiseService("/start", &USController::scan_init, this);
         ROS_INFO_STREAM("Controller Class initialized");
 
         //debug
-        pub_debug_centroid_ = nh_.advertise<geometry_msgs::PointStamped>("/debug",10);
+        //pub_debug_centroid_ = nh_.advertise<geometry_msgs::PointStamped>("/debug",10);
         //
         
     }
@@ -185,14 +196,20 @@ void USController::init_pos(void){
     return;
 }
 
-void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
+#ifndef USE_PCL 
+void USController::plan(const us_image_processing::VesselState::ConstPtr& msg)
+#else
+void USController::plan(const pcl_msgs::ModelCoefficients::ConstPtr& msg)
+#endif
+{
     
     tf_ = ros::Time::now();
     //double dt = 1e-9*(tf_.nsec-ti_.nsec);
     double dt = (tf_-ti_).toSec();
-    if(dt>1){
+    if(dt>1.5){
+        ROS_WARN_STREAM("too large dt: "<<dt);
         dt = 0;
-        ROS_WARN_STREAM("too large dt");
+        
     }
 
     if(!INIT){
@@ -212,7 +229,7 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     }
     catch (tf2::TransformException &ex) {
         ROS_WARN("%s",ex.what());
-        ros::Duration(1.0).sleep();
+        //ros::Duration(1.0).sleep();
         //continue;
     }
     /*
@@ -231,22 +248,36 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     //
     */
 
+#ifndef USE_PCL 
     //n wrt base link
     n << msg->direction.x, msg->direction.y, msg->direction.z;
     n.normalize();
 
     centroid << msg->centroid.x, msg->centroid.y, msg->centroid.z;
+#else
+    n << msg->values[3], msg->values[4], msg->values[5];
+    centroid << msg->values[0], msg->values[1], msg->values[2];
+#endif
 
     Eigen::Vector3d x_axis,y_axis,z_axis;
-    z_axis << 0.0, 0.0, 1.0; // z_ef_
-    tf2::Stamped<Eigen::Vector3d> stampedZ(z_axis,ros::Time(),EE_LINK);
 
-    tf2::doTransform(stampedZ, stampedZ, Te0_vct);
-    stampedZ.normalize(); //z_0_
+    // z_axis << 0.0, 0.0, 1.0; // z_ef_
+    // tf2::Stamped<Eigen::Vector3d> stampedZ(z_axis,ros::Time(),EE_LINK);
 
-    x_axis = (n.cross(stampedZ)).normalized(); // x_0
+    // tf2::doTransform(stampedZ, stampedZ, Te0_vct);
+    // stampedZ.normalize(); //z_0_
+
+    // x_axis = (n.cross(stampedZ)).normalized(); // x_0
+    // y_axis = n; // y_0
+    // z_axis = (x_axis.cross(y_axis)).normalized(); // z_0
+
+    //////
     y_axis = n; // y_0
-    z_axis = (x_axis.cross(y_axis)).normalized(); // z_0
+    y_axis[2] = 0;
+    y_axis.normalized();
+    z_axis << 0.0, 0.0, -1.0;
+    x_axis = (y_axis.cross(z_axis)).normalized(); // x_0
+    //////
 
     Eigen::Matrix3d pose_rotm;
     pose_rotm << x_axis, y_axis, z_axis;
@@ -258,6 +289,7 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
     //marching = marching_vel_*y_axis*dt;
     marching = marching_vel_*y_axis;
     ROS_INFO_STREAM("y: "<<y_axis(0)<<','<<y_axis(1)<<','<<y_axis(2));
+    ROS_INFO_STREAM("centroid: "<<centroid(0)<<','<<centroid(1)<<','<<centroid(2));
     ROS_INFO_STREAM("dt: "<<dt);
     ROS_INFO_STREAM("marching: "<<marching(0)<<','<<marching(1)<<','<<marching(2));
     
@@ -284,11 +316,13 @@ void USController::plan(const us_image_processing::VesselState::ConstPtr& msg){
 #ifdef SIM
 void USController::updatePose(const geometry_msgs::PoseStampedConstPtr& msg){
     curr_pose = msg->pose;
+    
     return;
 }
 #else
 void USController::updatePose(const iiwa_msgs::CartesianPoseConstPtr& msg){
     curr_pose = msg->poseStamped.pose;
+    //ROS_INFO_STREAM("updated");
     return;
 }
 #endif

@@ -16,7 +16,7 @@ Hdw_init = [-1 0  0  T(1);
              0 0 -1  0;
              0 0  0  1];
     
-waitForTransform(tftree,'world','iiwa_link_ee');
+%waitForTransform(tftree,'world','iiwa_link_ee');
 
 
 [Xc,Yc,Zc] = genVessel(0.01,Hvw);

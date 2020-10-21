@@ -45,3 +45,10 @@ pse_n1 = diff(se,n(1));
 pse_n2 = diff(se,n(2));
 pse_r = diff(se,r);
 
+% Ver. 3
+% Cylinder Fitting
+se = (sqrt(t1_quad)-r)^2; %squared error
+pse_n1 = diff(se,n(1));
+pse_n2 = diff(se,n(2));
+pse_r = diff(se,r);
+

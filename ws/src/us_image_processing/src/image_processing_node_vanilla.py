@@ -10,7 +10,7 @@ from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import PointField
 
 import numpy as np
-import os,sys
+import os,sys,time
 
 sys.path.append(os.path.expanduser("~/workspace/us_robot/network"))
 
@@ -21,24 +21,33 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class ImageBuffer:
     def __init__(self):
         self.bridge = CvBridge()
-        self.sub_img = rospy.Subscriber("us_image",Image,self.update_image)
-        self.pub_img = rospy.Publisher("mask",Image)
+        self.sub_img = rospy.Subscriber("/imfusion/cephasonics",Image,self.update_image)
+        self.pub_img = rospy.Publisher("/mask",Image)
+        # self.pub_img_debug = rospy.Publisher("/us_image",Image)
         self.img = None
+        self.stamp = None
 
     def update_image(self,msg):
-        tmp = cv2.resize(self.bridge.imgmsg_to_cv2(msg,desired_encoding='mono8'),(256,256),interpolation=cv2.INTER_LANCZOS4)
+        self.stamp = msg.header.stamp
+        msg.encoding = 'mono8'
+        #tmp = cv2.resize(self.bridge.imgmsg_to_cv2(msg,desired_encoding='mono8'),(256,256),interpolation=cv2.INTER_LANCZOS4)
+        tmp = cv2.resize(self.bridge.imgmsg_to_cv2(msg),(256,256),interpolation=cv2.INTER_LANCZOS4)
+        # us_image = self.bridge.cv2_to_imgmsg(tmp)
+        # us_image.encoding = 'mono8'
+        # self.pub_img_debug.publish(us_image)
+        
         self.img = torch.Tensor((tmp.astype(np.float)/255-0.5)*2).unsqueeze(0).unsqueeze(0) #batch + color
-
+    
     def get_image(self):
         if self.img is None:
             rospy.loginfo("Waiting for the first image.")
             return -1
         else:
-            return self.img
+            return self.img,self.stamp
             #TODO: return time stamp to avoid inaccurate tf
 
     def send_image(self,img):
-        msg = self.bridge.cv2_to_imgmsg(img, encoding="mono8")
+        msg = self.bridge.cv2_to_imgmsg(img, encoding="bgr8")
         self.pub_img.publish(msg)
 
 if __name__ == '__main__':
@@ -58,7 +67,7 @@ if __name__ == '__main__':
 
     img_buf = ImageBuffer()
     
-    while img_buf.get_image() is -1:
+    while img_buf.get_image() is -1 and not rospy.is_shutdown():
         rospy.sleep(0.2)
 
     sx = rospy.get_param('/calibration/scaling_x',1.4648e-4)
@@ -68,19 +77,36 @@ if __name__ == '__main__':
 
     calibMtx = np.array([[sx,0,cx],[0,0,0],[0,sy,cz]])
 
+    rospy.loginfo("Initialized")
+    
+    # run_cntr = 1
+    # avg_dt = 0
     while not rospy.is_shutdown():
-        img = img_buf.get_image()
+        img, curr_stamp = img_buf.get_image()
 
         img_cu = img.to(device)
         
+        # ti = time.time()
         with torch.no_grad():
                 pred_cu = unet(img_cu)
-        
+        # dt = time.time()-ti
+        # avg_dt = (run_cntr-1)/run_cntr*avg_dt+1/run_cntr*dt
+        # rospy.loginfo("avg pred time: ",dt)
+        # run_cntr += 1
+
         pred = pred_cu.cpu()
         pred = np.array(pred[0].permute(1, 2, 0))
+
         pred = (pred*255).astype(np.uint8)
         _,pred = cv2.threshold(pred,thresh=127,maxval=255,type=cv2.THRESH_BINARY)
-        img_buf.send_image(pred)
+        
+        # print(img.shape)
+        img_rgb = cv2.cvtColor(np.array((np.squeeze(img)/2+0.5)*255),cv2.COLOR_GRAY2RGB)
+        pred_rgb = cv2.cvtColor(pred,cv2.COLOR_GRAY2RGB)
+
+        pred_rgb[:,:,-2] = 0
+        #img_buf.send_image(img_rgb)
+        img_buf.send_image( (pred_rgb*0.2+img_rgb).astype(np.uint8) )
         #rospy.loginfo(pred.shape)
 
         #contour extraction
@@ -91,7 +117,18 @@ if __name__ == '__main__':
             continue
         #to point cloud msg
         if len(contours) > 0:
-            edge_points = np.array(contours[0].reshape([-1,2])).astype(np.float).transpose()
+            
+            max_point_num = 0;
+            target_contour_idx = 0;
+            for idx,contour in enumerate(contours):
+                # print("No. ",idx," points num: ",len(contour))
+                if len(contour) > max_point_num:
+                    max_point_num = len(contour);
+                    target_contour_idx = idx
+
+            # print(target_contour_idx)
+            # print(len(contours[target_contour_idx]))
+            edge_points = np.array(contours[target_contour_idx].reshape([-1,2])).astype(np.float).transpose()
             edge_points = np.concatenate((edge_points, np.ones([1,edge_points.shape[1]])), axis=0)
             #rospy.loginfo(edge_points.shape)
             edge_points_3d = np.matmul(calibMtx,edge_points)
@@ -100,7 +137,7 @@ if __name__ == '__main__':
             msg_pc2 = PointCloud2()
             msg_pc2.header.frame_id = "cephalinear_link_ee"
             #msg_pc2.header.frame_id = "world"
-            msg_pc2.header.stamp = rospy.Time.now()
+            msg_pc2.header.stamp = curr_stamp
             msg_pc2.height = 1
             msg_pc2.width = edge_points_3d.shape[1]
             msg_pc2.is_bigendian = False

@@ -2,7 +2,6 @@
 <launch>
     <arg name="type" default="7" />
     <arg name="tool_name" default="cephalinear"/>
-    <arg name="use_sim_time" default="false" />
 
     <!-- The name of the parameter under which the URDF is loaded -->
     <arg name="robot_description" default="robot_description"/>
@@ -14,11 +13,9 @@
 
     <param name="/iiwa/toolName" type="string" value="$(arg tool_name)" /> 
 
-    <param name="/use_sim_time" type="bool" value="$(arg use_sim_time)" />
-
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
     
-    <node name="translator_node" pkg="test_us_control" type="translator_node" output="screen" />
+    <node name="translator_node" pkg="iiwa_bringup" type="translator_node" output="screen" />
 
     <!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find iiwa_description)/rviz/iiwa.rviz" required="true" />-->
     <!-- <node name="rviz" pkg="rviz" type="rviz"/> -->

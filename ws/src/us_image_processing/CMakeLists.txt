@@ -13,6 +13,7 @@ find_package(catkin REQUIRED cmake_modules COMPONENTS
   sensor_msgs
   cv_bridge
   pcl_ros
+  tf2
   message_generation
 )
 

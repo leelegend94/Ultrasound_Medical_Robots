@@ -3,6 +3,7 @@
 *.pt
 *.pth
 *.tar
+*.png
 *.m~
 **/build
 **/devel

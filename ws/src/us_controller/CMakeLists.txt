@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   us_image_processing
   tf2
   tf2_ros
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions

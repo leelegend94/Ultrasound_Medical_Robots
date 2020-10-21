@@ -13,7 +13,7 @@ msg_image.Encoding = 'mono8';
 
 %init
 R = eul2rotm([pi/3,0,-pi/2.2]);
-T = [0.6; 0.1;-0.1];
+T = [0.6; 0.0;-0.1];
 Hvw = [R T; 0 0 0 1];
 
 Hdw_init = [-1 0  0  T(1);
