@@ -21,7 +21,7 @@ find_package(catkin REQUIRED cmake_modules COMPONENTS
 find_package(Eigen3 REQUIRED)
 add_definitions(${EIGEN_DEFINITIONS})
 
-find_package(Torch REQUIRED PATHS /usr/local/libtorch)
+# find_package(Torch REQUIRED PATHS /usr/local/libtorch)
 find_library(nlopt_LIBRARIES nlopt /usr/local/lib)
 
 # System dependencies are found with CMake's conventions

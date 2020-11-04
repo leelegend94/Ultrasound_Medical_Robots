@@ -1,5 +1,7 @@
+# Default value is suitable for CPLA12875 probe.
 calibration: 
-  scaling_x: 1.4648e-4 #0.0375/256 = 1.4648e-4 #0.2/512
-  scaling_y: 1.5625e-4 #0.04/256 = 1.5625e-4
-  c_x: -0.01875 # -0.01875
-  c_z: 0 #
+  scaling_x: 1.4648e-4 #0.0375/256 = 1.4648e-4 #US beam width/pixel number in x [m]
+  scaling_y: 1.5625e-4 #0.04/256 = 1.5625e-4 #US beam depth/pixel number in y [m]
+  # Origin coordinate of the pixel frame with respect to end-effector link
+  c_x: -0.01875 # -0.0375/2=-0.01875  [m]
+  c_z: 0 # [m]

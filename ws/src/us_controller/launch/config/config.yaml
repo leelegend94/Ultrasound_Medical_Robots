@@ -1,4 +1,5 @@
-init_pose: [0.6, 0.0, 0.12, 0, 1, 0, 0] #x y z qx qy qz qw
+init_pose: [0.6, 0.0, 0.12, 0, 1, 0, 0] #x y z qx qy qz qw # skip this if the end-effector pose is initialized with hand guide mode
+#default value is the center point of the simulated vessel
 
 controller:
   cartesian_stiffness: [1000,400,300,2,20,20]
@@ -7,4 +8,4 @@ controller:
   nullspace_damping: 1.0
 
 scan:
-  marching_vel: 0.01
+  marching_vel: 0.01 # Sweeping velocity
