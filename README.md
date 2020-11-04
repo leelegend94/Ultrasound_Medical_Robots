@@ -7,7 +7,7 @@ Codes are verified in the environment:
 ---
 ## Introduction
 This repo includes implementation of vessel simulator, modified UNet and all corresponding ROS nodes.
-| folder/file | Description |
+| Folder/File | Description |
 | :----: | :----: |
 | matlab/simGeo_pc2_vis | Simulate a virual vessel in space, calculate and publish the vessel cross section points in PointCloud2 format. |
 | matlab/opt_grad.m | Use matlab symbolic toolbox to find gradients of the objective function. |
@@ -68,6 +68,8 @@ Initial pose is already reached (eg. init. by hand guide mode):
 
     rosservice call /start "data: false"
 
+Run the estimator: 
+
     rosrun us_image_processing estimator_node
 
 ### Simulation
@@ -91,5 +93,7 @@ Go to the pre-defined initial pose:
 Initial pose is already reached (eg. init. by black magic): 
 
     rosservice call /start "data: false"
+
+Run the estimator: 
 
     rosrun us_image_processing estimator_node
