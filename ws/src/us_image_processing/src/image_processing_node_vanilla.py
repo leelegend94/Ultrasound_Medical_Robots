@@ -126,8 +126,12 @@ if __name__ == '__main__':
                 for idx,contour in enumerate(contours):
                     # print("No. ",idx," points num: ",len(contour))
                     if len(contour) > max_point_num:
-                        max_point_num = len(contour);
+                        max_point_num = len(contour)
                         target_contour_idx = idx
+
+                        M = cv2.moments(contour)
+                        tmp_cx = int(M['m10']/M['m00'])
+                        tmp_cy = int(M['m01']/M['m00'])
             else:
                 THR_MIN_AREA = 100;
                 min_dist = 1000;
