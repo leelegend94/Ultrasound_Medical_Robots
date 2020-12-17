@@ -16,6 +16,7 @@ This repo includes implementation of vessel simulator, modified UNet and all cor
 | network/mkDataSet.py | Create dataset from multiple image sets. |
 | network/train_eval.ipynb | Training script |
 | plugin_ws | ImFusion Plugins: Send Cephasonics image streams via ROS topic. |
+|ws/src/iiwa_tools| Modified robot description with tool link. |
 |ws/src/iiwa_bringup| 1. Set tool link 2. Upload robot description 3. Transform /iiwa/state/JointPositionVelocity into /joint_states |
 | ws/src/us_controller | Calculate target pose according to vessel direction vector. |
 | ws/src/us_image_processing/src/igtl_read_node | Transform openIGTLink message to ROS messages. |
@@ -26,7 +27,7 @@ This repo includes implementation of vessel simulator, modified UNet and all cor
 ## Prerequirements 
 
 ### iiwa_stack
-Install iiwa_Stack https://github.com/IFL-CAMP/iiwa_stack. Source the workspace.
+Install iiwa_stack https://github.com/IFL-CAMP/iiwa_stack. Source the workspace.
 
 ### NLopt
 The optimizer is dependent on NLopt https://nlopt.readthedocs.io/en/latest/. Please follow the instruction to install the library in default location.

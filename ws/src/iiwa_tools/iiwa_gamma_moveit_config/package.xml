@@ -1,0 +1,25 @@
+<package format="2">
+
+  <name>iiwa_gamma_moveit_config</name>
+  <version>0.0.1</version>
+  <description>
+     An automatically generated package with all the configuration and launch files for using the iiwa with the MoveIt Motion Planning Framework with the gamma camera on top
+  </description>
+  <author email="marco.esposito@tum.de">Marco Esposito</author>
+  <maintainer email="marco.esposito@tum.de">Marco Esposito</maintainer>
+
+  <license>GPLv3</license>
+
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>moveit_planners_ompl</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <depend>iiwa_description</depend>
+  <depend>gamma_camera_description</depend>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+</package>

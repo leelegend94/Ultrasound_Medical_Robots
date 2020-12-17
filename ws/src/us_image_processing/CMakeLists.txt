@@ -150,7 +150,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(image_segmentation_node src/image_segmentation_node.cpp)
+# add_executable(image_segmentation_node src/image_segmentation_node.cpp)
 add_executable(estimator_node src/estimator_node.cpp)
 add_executable(igtl_read_node src/igtl_read_node.cpp)
 
@@ -162,15 +162,15 @@ add_executable(igtl_read_node src/igtl_read_node.cpp)
 
 # Add cmake target dependencies of the executable
 # same as for the library above
-add_dependencies(image_segmentation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(image_segmentation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(estimator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(igtl_read_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(image_segmentation_node
-  ${catkin_LIBRARIES}
-  ${TORCH_LIBRARIES}
-)
+# target_link_libraries(image_segmentation_node
+#   ${catkin_LIBRARIES}
+#   ${TORCH_LIBRARIES}
+# )
 target_link_libraries(estimator_node
   ${catkin_LIBRARIES}
   ${nlopt_LIBRARIES}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<RoboticsAPIData version="3">
+    <world>
+        <gravitation x="0.0" y="0.0" z="9.81"/>
+    </world>
+    <objectTemplates>
+        <toolTemplate class="" name="GammaCamera">
+            <loadData cogA="0.0" cogB="0.0" cogC="0.0" cogX="4.8521743140624425" cogY="28.770410618052452" cogZ="47.518633249436505" inertiaX="0.0" inertiaY="0.0" inertiaZ="0.0" mass="1.3249206993930298"/>
+        </toolTemplate>
+    </objectTemplates>
+</RoboticsAPIData>

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7_wobbler">
+    
+    <!-- Import Rviz colors -->
+    <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
+    <!--Import the lbr iiwa macro -->
+    <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
+    
+    <link name="world">
+        <visual>
+            <origin xyz="0 0 0.42" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.68 0.605 0.84"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.42" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.68 0.605 0.84"/>
+            </geometry>
+        </collision>
+    </link>
+    
+    <gazebo reference="world">
+        <static>true</static>
+    </gazebo>
+    
+    <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world">
+        <origin xyz="0.20 0 0.84" rpy="0 0 0"/>
+    </xacro:iiwa7>
+    
+    <!-- us convex probe -->
+    <property name="wobbler_mass" value="0.200" />
+    <property name="wobbler_joint_offset" value="0.00 0.00 0.00" />
+    <property name="wobbler_link_offset" value="0.00 0.00 0.18525" />
+    
+    <joint name="wobbler_joint" type="fixed">
+        <parent link="iiwa_link_ee" />
+        <child link = "wobbler_link" />
+        <origin xyz="${wobbler_joint_offset}" rpy="0 0 0" />  
+    </joint>
+    
+    <link name="wobbler_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${PI} 0"/>
+            <geometry>
+                <mesh filename="package://iiwa_wobbler_description/meshes/visual/wobbler.stl"/>
+                <!-- 	<cylinder length="0.18525" radius="0.085"/> -->
+            </geometry>
+            <material name="Grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 ${PI} 0"/>
+            <geometry>
+                <mesh filename="package://iiwa_wobbler_description/meshes/collision/wobbler.stl"/>
+                <!-- 	<cylinder length="0.18525" radius="0.085"/> -->
+            </geometry>
+            <material name="Grey"/>
+        </collision>
+    </link>
+    
+    <joint name="wobbler_tip_joint" type="fixed">
+        <parent link="wobbler_link" />
+        <child link = "wobbler_link_ee" />
+        <origin xyz="${wobbler_link_offset}" rpy="0 0 0" />  
+    </joint>
+    
+    <link name="wobbler_link_ee"/>
+    
+</robot> 

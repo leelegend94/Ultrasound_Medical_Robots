@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: iiwa_linear_description
+    relative_path: urdf/iiwa_linear.urdf
+  SRDF:
+    relative_path: config/iiwa7_linear.srdf
+  CONFIG:
+    generated_timestamp: 1479823832

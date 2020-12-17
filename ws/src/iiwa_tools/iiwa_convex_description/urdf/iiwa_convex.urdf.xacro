@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7_convex">
+    
+    <!-- Import Rviz colors -->
+    <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
+    <!--Import the lbr iiwa macro -->
+    <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
+    
+    <link name="world">
+        <visual>
+            <origin xyz="0 0 0.42" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.68 0.605 0.84"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.42" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.68 0.605 0.84"/>
+            </geometry>
+        </collision>
+    </link>
+    
+    <gazebo reference="world">
+        <static>true</static>
+    </gazebo>
+    
+    <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world">
+        <origin xyz="0.20 0 0.84" rpy="0 0 0"/>
+    </xacro:iiwa7>
+    
+    <!-- us convex probe -->
+    <xacro:property name="convex_mass" value="300.00" />
+    <xacro:property name="convex_joint_offset" value="0.00 0.00 0.00" />
+    <xacro:property name="convex_link_offset" value="0.00 0.00 0.187" />
+    
+    <joint name="convex_joint" type="fixed">
+        <parent link="iiwa_link_ee" />
+        <child link = "convex_link" />
+        <origin xyz="${convex_joint_offset}" rpy="0 0 0" />  
+    </joint>
+    
+    <link name="convex_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${PI} ${-PI/2.0}"/>
+            <geometry>
+                <mesh filename="package://iiwa_convex_description/meshes/visual/convex.stl"/>
+                <!-- 	<cylinder length="0.18525" radius="0.085"/> -->
+            </geometry>
+            <material name="Grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 ${PI} ${-PI/2.0}"/>
+            <geometry>
+                <mesh filename="package://iiwa_convex_description/meshes/collision/convex.stl"/>
+                <!-- 	<cylinder length="0.18525" radius="0.085"/> -->
+            </geometry>
+            <material name="Grey"/>
+        </collision>
+    </link>
+    
+    <joint name="convex_tip_joint" type="fixed">
+        <parent link="convex_link" />
+        <child link = "convex_link_ee" />
+        <origin xyz="${convex_link_offset}" rpy="0 0 0" />  
+        
+    </joint>
+    
+    <link name="convex_link_ee"/>
+    
+</robot> 

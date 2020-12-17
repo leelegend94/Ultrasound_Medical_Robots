@@ -1,0 +1,20 @@
+sensors:
+ - sensor_plugin: occupancy_map_monitor/DepthImageOctomapUpdater
+   image_topic: /iiwa/move_group/camera/depth_registered/image_raw  # TODO: hack, remove /iiwa and use robot_name somehow
+   queue_size: 1
+   near_clipping_plane_distance: 0.3
+   far_clipping_plane_distance: 3.0
+   skip_vertical_pixels: 1
+   skip_horizontal_pixels: 1
+   shadow_threshold: 0.8
+   padding_scale: 3.0
+   padding_offset: 0.08
+   filtered_cloud_topic: output_cloud
+   
+ #- sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+   #image_topic: /move_group/camera/depth_registered/points
+   #max_range: 5.0
+   #point_subsample: 1
+   #padding_scale: 1.2
+   #padding_offset: 0.05
+   #filtered_cloud_topic: output_cloud

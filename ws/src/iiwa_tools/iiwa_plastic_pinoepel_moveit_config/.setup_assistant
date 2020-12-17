@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: iiwa_pinoepel_description
+    relative_path: urdf/iiwa_pinoepel.urdf
+  SRDF:
+    relative_path: config/pinoepel_iiwa.srdf
+  CONFIG:
+    generated_timestamp: 1454069121

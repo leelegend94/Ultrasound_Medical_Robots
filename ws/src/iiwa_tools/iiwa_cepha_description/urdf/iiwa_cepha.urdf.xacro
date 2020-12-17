@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7_cepha">
+  
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
+  <!--Import the lbr iiwa macro -->
+  <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
+  
+  <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
+  <xacro:arg name="robot_name" default="iiwa"/>
+  
+  <link name="world">
+    <visual>
+      <origin xyz="0 0 0.42" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.68 0.605 0.84"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.42" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.68 0.605 0.84"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <gazebo reference="world">
+    <static>true</static>
+  </gazebo>
+  
+  <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world">
+    <origin xyz="0 0 0.84" rpy="0 0 0"/>
+  </xacro:iiwa7>
+  
+  <!-- us convex probe -->
+  <property name="cephalinear_mass" value="0.200" />
+  <property name="cephalinear_joint_offset" value="0.00 0.00 0.00" />
+  <property name="cephalinear_link_offset" value="0.00 0.00 0.190" />
+  
+  <joint name="cephalinear_joint" type="fixed">
+    <parent link="iiwa_link_ee" />
+    <child link = "cephalinear_link" />
+    <!-- <origin xyz="${cephalinear_joint_offset}" rpy="0 ${-PI/2.0} 0" /> -->
+    <origin xyz="${cephalinear_joint_offset}" rpy="0 0 0" />
+  </joint>
+  
+  <link name="cephalinear_link">
+    <visual>
+      <!-- <origin xyz="0 0.027 -0.082" rpy="0 0 0"/> -->
+      <origin xyz="0 0 0.19" rpy="0 ${PI} 0"/>
+      <geometry>
+	<!-- <cylinder length="0.164" radius="0.020"/> -->
+        <mesh filename="package://iiwa_cepha_description/meshes/Linearprobe_reduced_cut.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Grey"/>
+    </visual>
+    <collision>
+      <!-- <origin xyz="0 0.027 -0.082" rpy="0 0 0"/>
+      <geometry>
+	<cylinder length="0.164" radius="0.020"/>
+      </geometry> -->
+      <origin xyz="0 0 0.19" rpy="0 ${PI} 0"/>
+      <geometry>
+        <mesh filename="package://iiwa_cepha_description/meshes/Linearprobe_reduced_cut.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>
+  </link>
+  
+  <joint name="cephalinear_tip_joint" type="fixed">
+    <parent link="cephalinear_link" />
+    <child link = "cephalinear_link_ee" />
+    <!-- <origin xyz="${cephalinear_link_offset}" rpy="0 ${PI/2.0} 0" /> --><origin xyz="${cephalinear_link_offset}" rpy="0 0 0" />   
+  </joint>
+  
+  <link name="cephalinear_link_ee"/>
+  
+  
+  <joint name="cephalinear_tip_joint_kuka" type="fixed">
+    <parent link="cephalinear_link" />
+    <child link = "cephalinear_link_ee_kuka" />
+    <origin xyz="${cephalinear_link_offset}" rpy="0 ${PI} 0" />   
+  </joint>
+  
+  <link name="cephalinear_link_ee_kuka"/>
+  
+</robot> 

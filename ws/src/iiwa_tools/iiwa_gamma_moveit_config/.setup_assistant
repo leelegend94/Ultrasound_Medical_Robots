@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: iiwa_gamma_description
+    relative_path: urdf/iiwa7_gamma.urdf
+  SRDF:
+    relative_path: config/iiwa7_gamma.srdf
+  CONFIG:
+    generated_timestamp: 1445789930

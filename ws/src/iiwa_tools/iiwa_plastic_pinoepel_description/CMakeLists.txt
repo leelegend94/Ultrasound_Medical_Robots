@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(iiwa_plastic_pinoepel_description)
+
+find_package(catkin REQUIRED)
+
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES lwr_gamma_description
+#  CATKIN_DEPENDS other_catkin_pkg
+#  DEPENDS system_lib
+)

@@ -1,0 +1,6 @@
+<launch>
+    <rosparam command="load" file="$(find iiwa_gamma_moveit_config)/config/sensors_rgbd.yaml" />
+    <include file="$(find webcam)/launch/kinect.launch" >
+        <arg name="depth_registration" value="true" />
+    </include>
+</launch>

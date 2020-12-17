@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7_pinoepel">
+  
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
+  <!--Import the lbr iiwa macro -->
+  <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
+  
+  <link name="world">
+    <visual>
+      <origin xyz="0 0 0.42" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.68 0.605 0.84"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.42" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.68 0.605 0.84"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <gazebo reference="world">
+    <static>true</static>
+  </gazebo>
+  
+  <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world">
+    <origin xyz="0 0 0.84" rpy="0 0 0"/>
+  </xacro:iiwa7>
+  
+  <!-- us convex probe -->
+  <property name="pinoepel_mass" value="0.200" />
+  <property name="pinoepel_joint_offset" value="0.00 0.00 0.00" />
+  <property name="pinoepel_link_offset" value="0.00 0.00 0.137" />
+  
+  <joint name="pinoepel_joint" type="fixed">
+    <parent link="iiwa_link_ee" />
+    <child link = "pinoepel_link" />
+    <origin xyz="${pinoepel_joint_offset}" rpy="0 ${PI/2.0} 0" />  
+  </joint>
+  
+  <link name="pinoepel_link">
+    <visual>
+      <origin xyz="0 0 0.0685" rpy="0 0 0"/>
+      <geometry>
+	<cylinder length="0.137" radius="0.020"/>
+      </geometry>
+      <material name="Grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.0685" rpy="0 0 0"/>
+      <geometry>
+	<cylinder length="0.137" radius="0.020"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>
+  </link>
+  
+  <joint name="pinoepel_tip_joint" type="fixed">
+    <parent link="pinoepel_link" />
+    <child link = "pinoepel_link_ee" />
+<!--      <origin xyz="${us_convex_link_offset}" rpy="${-PI/2.0} 0 0" />      -->
+   <origin xyz="${pinoepel_link_offset}" rpy="0 -${PI/2.0} 0" />   
+  </joint>
+  
+  <link name="pinoepel_link_ee"/>
+</robot> 

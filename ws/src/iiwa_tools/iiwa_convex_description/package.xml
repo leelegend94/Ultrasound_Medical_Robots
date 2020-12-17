@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+  <name>iiwa_convex_description</name>
+  <version>1.0.0</version>
+  <description>The iiwa_convex_description package</description>
+
+  <maintainer email="salvo.virga@tum.de">Salvo Virga</maintainer>
+
+  <license>GPLv3</license>
+
+  <author email="salvo.virga@tum.de">Salvo Virga</author> 
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>

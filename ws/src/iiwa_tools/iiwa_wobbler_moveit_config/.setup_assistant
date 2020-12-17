@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: iiwa_wobbler_description
+    relative_path: urdf/iiwa_wobbler.urdf
+  SRDF:
+    relative_path: config/iiwa7_wobbler.srdf
+  CONFIG:
+    generated_timestamp: 1454083081

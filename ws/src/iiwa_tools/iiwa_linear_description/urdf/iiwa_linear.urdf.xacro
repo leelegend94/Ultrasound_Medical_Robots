@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7_linear">
+  
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
+  <!--Import the lbr iiwa macro -->
+  <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
+  
+  <link name="world">
+    <visual>
+      <origin xyz="0 0 0.42" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.68 0.605 0.84"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.42" rpy="0 0 0"/>
+      <geometry>
+	<box size="0.68 0.605 0.84"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <gazebo reference="world">
+    <static>true</static>
+  </gazebo>
+  
+  <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world">
+    <origin xyz="0 0 0.84" rpy="0 0 0"/>
+  </xacro:iiwa7>
+  
+  <!-- us convex probe -->
+  <property name="linear_mass" value="0.200" />
+  <property name="linear_joint_offset" value="0.00 0.00 0.00" />
+  <property name="linear_link_offset" value="0.0003 0.0131 -0.1038" />
+  
+  <joint name="linear_joint" type="fixed">
+    <parent link="iiwa_link_ee" />
+    <child link = "linear_link" />
+    <origin xyz="${linear_joint_offset}" rpy="0 ${-PI/2.0} 0" />  
+  </joint>
+  
+  <link name="linear_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+<!-- 	<mesh filename="package://iiwa_linear_description/meshes/visual/linear_m.stl"/> -->
+		<cylinder length="0.1038" radius="0.05"/>
+      </geometry>
+      <material name="Grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+<!-- 	<mesh filename="package://iiwa_linear_description/meshes/collision/linear_m_coarse.stl"/> -->
+		<cylinder length="0.1038" radius="0.05"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>
+  </link>
+  
+  <joint name="linear_tip_joint" type="fixed">
+    <parent link="linear_link" />
+    <child link = "linear_link_ee" />
+<!--     <origin xyz="${linear_link_offset}" rpy="0 ${PI/2.0} -0.50597095015" />    -->
+      <origin xyz="${linear_link_offset}" rpy="${PI/2.0} 1.065 ${PI/2.0}" />    
+<!--     1.569, 1.065, 1.569 -->
+  </joint>
+  
+  <link name="linear_link_ee"/>
+  
+  
+  <joint name="linear_tip_joint_kuka" type="fixed">
+    <parent link="linear_link" />
+    <child link = "linear_link_ee_kuka" />
+    <origin xyz="${linear_link_offset}" rpy="-0.50597095015 ${PI} 0" />   
+  </joint>
+  
+  <link name="linear_link_ee_kuka"/>
+  
+</robot> 

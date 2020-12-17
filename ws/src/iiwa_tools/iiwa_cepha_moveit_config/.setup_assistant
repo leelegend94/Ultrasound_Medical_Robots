@@ -1,0 +1,8 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: iiwa_cepha_description
+    relative_path: urdf/iiwa_cepha.urdf.xacro
+  SRDF:
+    relative_path: config/iiwa7_cepha.srdf
+  CONFIG:
+    generated_timestamp: 1467721298
