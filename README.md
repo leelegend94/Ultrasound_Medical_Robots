@@ -85,7 +85,7 @@ In Matlab: Launch /matlab/simGeo_pc2_vis/us_image_ros.m
     roslaunch us_image_processing  image_processing.launch
     roslaunch us_controller us_controller.launch
 
-    Call the service according to your initialization method:
+Call the service according to your initialization method:
 Go to the pre-defined initial pose:
     
     rosservice call /start "data: true"

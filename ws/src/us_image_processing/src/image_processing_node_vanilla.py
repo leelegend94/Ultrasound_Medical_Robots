@@ -117,40 +117,62 @@ if __name__ == '__main__':
             continue
         #to point cloud msg
         if len(contours) > 0:
-            
-            max_point_num = 0;
+        #     max_point_num = 0;
+        #     target_contour_idx = 0;
+        #     for idx,contour in enumerate(contours):
+        #         # print("No. ",idx," points num: ",len(contour))
+        #         if len(contour) > max_point_num:
+        #             max_point_num = len(contour);
+        #             target_contour_idx = idx
+            THR_MIN_AREA = 100;
+            min_dist = 1000;
             target_contour_idx = 0;
             for idx,contour in enumerate(contours):
-                # print("No. ",idx," points num: ",len(contour))
-                if len(contour) > max_point_num:
-                    max_point_num = len(contour);
-                    target_contour_idx = idx
+                area = cv2.contourArea(contour)
+                if area > THR_MIN_AREA:
+                    M = cv.moments(contour)
+                    cx = int(M['m10']/M['m00'])
+                    cy = int(M['m01']/M['m00'])
 
-            # print(target_contour_idx)
-            # print(len(contours[target_contour_idx]))
-            edge_points = np.array(contours[target_contour_idx].reshape([-1,2])).astype(np.float).transpose()
-            edge_points = np.concatenate((edge_points, np.ones([1,edge_points.shape[1]])), axis=0)
-            #rospy.loginfo(edge_points.shape)
-            edge_points_3d = np.matmul(calibMtx,edge_points)
-            data_array = edge_points_3d.transpose().reshape([-1]).astype(np.float32)
-            #rospy.loginfo(len(data_array))
-            msg_pc2 = PointCloud2()
-            msg_pc2.header.frame_id = "cephalinear_link_ee"
-            #msg_pc2.header.frame_id = "world"
-            msg_pc2.header.stamp = curr_stamp
-            msg_pc2.height = 1
-            msg_pc2.width = edge_points_3d.shape[1]
-            msg_pc2.is_bigendian = False
-            msg_pc2.point_step = 12 # 3(x,y,z)*4(byte)
-            msg_pc2.row_step = edge_points_3d.shape[1]*12
-            msg_pc2.is_dense = False
+                    dist = sqrt((cx-cx_)**2+(cy-cy_)**2)
 
-            msg_pc2.fields = [PointField('x', 0, PointField.FLOAT32, 1),
-                            PointField('y', 4, PointField.FLOAT32, 1),
-                            PointField('z', 8, PointField.FLOAT32, 1)]
+                    if dist < min_dist:
+                        min_dist = dist
+                        target_contour_idx = idx
+                        tmp_cx = cx
+                        tmp_cy = cy
 
-            msg_pc2.data = data_array.tostring()
-            #rospy.loginfo(len(msg_pc2.data)," points are published.")
-            pub_pc2.publish(msg_pc2)
+            cx_ = tmp_cx
+            cy_ = tmp_cy
+
+            if min_dist is not 1000:
+                # print(target_contour_idx)
+                # print(len(contours[target_contour_idx]))
+                edge_points = np.array(contours[target_contour_idx].reshape([-1,2])).astype(np.float).transpose()
+                edge_points = np.concatenate((edge_points, np.ones([1,edge_points.shape[1]])), axis=0)
+                #rospy.loginfo(edge_points.shape)
+                edge_points_3d = np.matmul(calibMtx,edge_points)
+                data_array = edge_points_3d.transpose().reshape([-1]).astype(np.float32)
+                #rospy.loginfo(len(data_array))
+                msg_pc2 = PointCloud2()
+                msg_pc2.header.frame_id = "cephalinear_link_ee"
+                #msg_pc2.header.frame_id = "world"
+                msg_pc2.header.stamp = curr_stamp
+                msg_pc2.height = 1
+                msg_pc2.width = edge_points_3d.shape[1]
+                msg_pc2.is_bigendian = False
+                msg_pc2.point_step = 12 # 3(x,y,z)*4(byte)
+                msg_pc2.row_step = edge_points_3d.shape[1]*12
+                msg_pc2.is_dense = False
+
+                msg_pc2.fields = [PointField('x', 0, PointField.FLOAT32, 1),
+                                PointField('y', 4, PointField.FLOAT32, 1),
+                                PointField('z', 8, PointField.FLOAT32, 1)]
+
+                msg_pc2.data = data_array.tostring()
+                #rospy.loginfo(len(msg_pc2.data)," points are published.")
+                pub_pc2.publish(msg_pc2)
+            else:
+                rospy.loginfo("Invalid contour! (Area < 100 pixels)")
         else:
-            rospy.loginfo("lost target, point cloud is not published!")
+            rospy.loginfo("Lost target, point cloud is not published!")
