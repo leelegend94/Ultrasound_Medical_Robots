@@ -45,13 +45,17 @@ The compile flag of us_image_processing OpenIGTLink_DIR should be set to the bui
 
     set(OpenIGTLink_DIR $ENV{HOME}/.local/OpenIGTLink/build)
 
+## Compile 
+	cd <project path>/ws
+	catkin_make
 ---
 ## Launch 
 1. Setup Ultrasound system, make the ros topic of US images available.
 2. Setup the following configuration files according to your system:
     - us_image_processing/launch/config.yaml
     - us_controller/launch/config.yaml
-3. Launch ROS nodes in the following sequence:
+3. Setup network paths in file ws/src/us_image_processing/src/image_processing_node_vanilla line 15,60
+4. Launch ROS nodes in the following sequence:
 
 (in separate terminals)
 

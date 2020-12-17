@@ -4,6 +4,7 @@ import torch
 import torchvision.transforms as transforms
 
 import cv2
+import math
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2
@@ -57,7 +58,7 @@ if __name__ == '__main__':
 
     #init networks
     rospy.loginfo("loading UNet")
-    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_of_usseg_phantom.pth")
+    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_phantom.pth")
     unet = UNet(init_features=64).to(device)
     unet.load_state_dict(torch.load(PATH))
     unet.eval()
@@ -81,6 +82,8 @@ if __name__ == '__main__':
     
     # run_cntr = 1
     # avg_dt = 0
+    cx_ = None
+    cy_ = None
     while not rospy.is_shutdown():
         img, curr_stamp = img_buf.get_image()
 
@@ -117,30 +120,32 @@ if __name__ == '__main__':
             continue
         #to point cloud msg
         if len(contours) > 0:
-        #     max_point_num = 0;
-        #     target_contour_idx = 0;
-        #     for idx,contour in enumerate(contours):
-        #         # print("No. ",idx," points num: ",len(contour))
-        #         if len(contour) > max_point_num:
-        #             max_point_num = len(contour);
-        #             target_contour_idx = idx
-            THR_MIN_AREA = 100;
-            min_dist = 1000;
-            target_contour_idx = 0;
-            for idx,contour in enumerate(contours):
-                area = cv2.contourArea(contour)
-                if area > THR_MIN_AREA:
-                    M = cv.moments(contour)
-                    cx = int(M['m10']/M['m00'])
-                    cy = int(M['m01']/M['m00'])
-
-                    dist = sqrt((cx-cx_)**2+(cy-cy_)**2)
-
-                    if dist < min_dist:
-                        min_dist = dist
+            if cx_ is None :
+                max_point_num = 0;
+                target_contour_idx = 0;
+                for idx,contour in enumerate(contours):
+                    # print("No. ",idx," points num: ",len(contour))
+                    if len(contour) > max_point_num:
+                        max_point_num = len(contour);
                         target_contour_idx = idx
-                        tmp_cx = cx
-                        tmp_cy = cy
+            else:
+                THR_MIN_AREA = 100;
+                min_dist = 1000;
+                target_contour_idx = 0;
+                for idx,contour in enumerate(contours):
+                    area = cv2.contourArea(contour)
+                    if area > THR_MIN_AREA:
+                        M = cv2.moments(contour)
+                        cx = int(M['m10']/M['m00'])
+                        cy = int(M['m01']/M['m00'])
+
+                        dist = math.sqrt((cx-cx_)**2+(cy-cy_)**2)
+
+                        if dist < min_dist:
+                            min_dist = dist
+                            target_contour_idx = idx
+                            tmp_cx = cx
+                            tmp_cy = cy
 
             cx_ = tmp_cx
             cy_ = tmp_cy
