@@ -274,8 +274,19 @@ public:
 
 	double optimize(std::vector<double> &n){
 		double min_cost;
+		ros::Time ti, tf;
+		double dt;
 		try{
+			ti = ros::Time::now();
 			nlopt::result result = opt_.optimize(n, min_cost);
+			dt = (ros::Time::now()-ti).toSec();
+			if(isFix_r){
+				ROS_INFO_STREAM("target: n, elapsed time: "<< dt);
+			}
+			else{
+				ROS_INFO_STREAM("target: r, elapsed time: "<< dt);
+			}
+
 			ROS_INFO_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n[0]<<", "<<n[1]<<", 1.0 r = "<<n[2]<<"\nepsilon = "<<n[3]);
 		}
 		catch (std::exception &e){
@@ -332,7 +343,7 @@ int main(int argc, char** argv){
 	spinner.start();
 	y_axis << 0.0, 1.0, 0.0; 
 
-	while(node.ringBuf.size() != node.ringBuf.capacity()){
+	while(node.ringBuf.size() != node.ringBuf.capacity() and ros::ok()){
 
 		try{
 	        Te0 = tf_buf.lookupTransform(BASE_LINK, EE_LINK, ros::Time(0));
@@ -346,7 +357,7 @@ int main(int argc, char** argv){
 	        continue;
 	    }
 
-	    tf2::Stamped<Eigen::Vector3d> stampedY(y_axis,ros::Time(),EE_LINK);
+	    tf2::Stamped<Eigen::Vector3d> stampedY(y_axis*0.01,ros::Time(),EE_LINK);
     	tf2::doTransform(stampedY, stampedY, Te0_vct);
     	
     	us_image_processing::VesselState msg_vesselState;
@@ -462,7 +473,7 @@ int main(int argc, char** argv){
 			std::cout << "random init. val: " <<n[0]<<", "<< n[1]<< std::endl;
 			cntr ++;
 		}
-		
+
 		// if(n[1]<0){
 		// 	n[0] = -n[0];
 		// 	n[1] = -n[1];

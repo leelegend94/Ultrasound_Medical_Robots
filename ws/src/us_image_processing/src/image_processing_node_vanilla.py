@@ -22,7 +22,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class ImageBuffer:
     def __init__(self):
         self.bridge = CvBridge()
-        self.sub_img = rospy.Subscriber("/imfusion/cephasonics",Image,self.update_image)
+        #self.sub_img = rospy.Subscriber("/imfusion/cephasonics",Image,self.update_image)
+        self.sub_img = rospy.Subscriber("/us_image",Image,self.update_image)
         self.pub_img = rospy.Publisher("/mask",Image)
         # self.pub_img_debug = rospy.Publisher("/us_image",Image)
         self.img = None
@@ -58,7 +59,8 @@ if __name__ == '__main__':
 
     #init networks
     rospy.loginfo("loading UNet")
-    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_phantom.pth")
+    #PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_phantom.pth")
+    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_real.pth")
     unet = UNet(init_features=64).to(device)
     unet.load_state_dict(torch.load(PATH))
     unet.eval()
@@ -80,22 +82,27 @@ if __name__ == '__main__':
 
     rospy.loginfo("Initialized")
     
-    # run_cntr = 1
-    # avg_dt = 0
+    run_cntr = 1.0
+    avg_dt = 0.0
     cx_ = None
     cy_ = None
+    ti_ = 0
     while not rospy.is_shutdown():
         img, curr_stamp = img_buf.get_image()
 
         img_cu = img.to(device)
         
-        # ti = time.time()
+        ti = time.time()
         with torch.no_grad():
                 pred_cu = unet(img_cu)
-        # dt = time.time()-ti
-        # avg_dt = (run_cntr-1)/run_cntr*avg_dt+1/run_cntr*dt
-        # rospy.loginfo("avg pred time: ",dt)
-        # run_cntr += 1
+        dt = time.time()-ti
+        avg_dt = (run_cntr-1)/run_cntr*avg_dt+1.0/run_cntr*dt
+        print("avg pred time: ",avg_dt)
+        #print(dt,", ",run_cntr)
+        run_cntr += 1
+
+        print("total time: ",ti-ti_)
+        ti_ = ti
 
         pred = pred_cu.cpu()
         pred = np.array(pred[0].permute(1, 2, 0))
@@ -112,7 +119,7 @@ if __name__ == '__main__':
         img_buf.send_image( (pred_rgb*0.2+img_rgb).astype(np.uint8) )
         #rospy.loginfo(pred.shape)
 
-        #contour extraction
+        #Post Processing
         try:
             _,contours,_ = cv2.findContours(pred, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         except:
@@ -121,23 +128,28 @@ if __name__ == '__main__':
         #to point cloud msg
         if len(contours) > 0:
             if cx_ is None :
-                max_point_num = 0;
-                target_contour_idx = 0;
+                max_area = 100
+                target_contour_idx = 0
+                min_dist = 1000
                 for idx,contour in enumerate(contours):
-                    # print("No. ",idx," points num: ",len(contour))
-                    if len(contour) > max_point_num:
-                        max_point_num = len(contour)
+                    area = cv2.contourArea(contour)
+                    print("1. itr No. ",idx," points num: ",area)
+                    if area > max_area:
+                        min_dist = 1001
+                        max_area = area
                         target_contour_idx = idx
 
                         M = cv2.moments(contour)
                         tmp_cx = int(M['m10']/M['m00'])
                         tmp_cy = int(M['m01']/M['m00'])
+                        print("tmp_cx: ",tmp_cx ) 
             else:
-                THR_MIN_AREA = 100;
-                min_dist = 1000;
-                target_contour_idx = 0;
+                THR_MIN_AREA = 100
+                min_dist = 1000
+                target_contour_idx = 0
                 for idx,contour in enumerate(contours):
                     area = cv2.contourArea(contour)
+                    print("No. ",idx," points num: ",area)
                     if area > THR_MIN_AREA:
                         M = cv2.moments(contour)
                         cx = int(M['m10']/M['m00'])
@@ -150,11 +162,12 @@ if __name__ == '__main__':
                             target_contour_idx = idx
                             tmp_cx = cx
                             tmp_cy = cy
+                            print("tmp_cx: ",tmp_cx )
 
-            cx_ = tmp_cx
-            cy_ = tmp_cy
 
             if min_dist is not 1000:
+                cx_ = tmp_cx
+                cy_ = tmp_cy
                 # print(target_contour_idx)
                 # print(len(contours[target_contour_idx]))
                 edge_points = np.array(contours[target_contour_idx].reshape([-1,2])).astype(np.float).transpose()
