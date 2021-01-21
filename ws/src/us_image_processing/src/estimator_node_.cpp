@@ -170,7 +170,6 @@ private:
 	{
 		data_struct *data_ptr = reinterpret_cast<data_struct *>(data);
 		double cp1,cp2,cp3,n1,n2,n3,n_d1,n_d2, r, r_d, epsilon;
-		double t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, t31;
 
 		int num_pc = data_ptr->pc_ptr->width;
 
@@ -192,43 +191,12 @@ private:
 			cp2 = data_ptr->pc_ptr->points[i].y;
 			cp3 = data_ptr->pc_ptr->points[i].z;
 
-			//imported
-			t2 = fabs(n1);
-			t3 = fabs(n2);
-			t4 = cp1*n2;
-			t5 = cp2*n1;
-			t6 = cp3*n1;
-			t7 = cp3*n2;
-			t8 = t2*t2;
-			t9 = t3*t3;
-			t10 = -t5;
-			t11 = -t6;
-			t12 = -t7;
-			t13 = cp1+t11;
-			t14 = cp2+t12;
-			t17 = t4+t10;
-			t22 = t8+t9+1.0;
-			t15 = fabs(t13);
-			t16 = fabs(t14);
-			t18 = fabs(t17);
-			t19 = (t17/fabs(t17));
-			t24 = 1.0/sqrt(t22);
-			t20 = t15*t15;
-			t21 = t16*t16;
-			t23 = t18*t18;
-			t25 = t24*t24*t24;
-			t26 = t20+t21+t23;
-			t27 = sqrt(t26);
-			t28 = 1.0/t27;
-			t29 = t24*t27;
-			t30 = -t29;
-			t31 = r+t30;
-			
+			//TODO: optimize this block by using matlab ccode
 			//cylinder fitting
-			cost += t31*t31;
+			cost += pow(pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r,2.0);
 
-			grad[0] += t31*((t24*t28*(cp3*t15*((t13/fabs(t13)))*2.0+cp2*t18*t19*2.0))/2.0+t2*t25*t27*((n1/fabs(n1))))*2.0;
-			grad[1] += t31*((t24*t28*(cp3*t16*((t14/fabs(t14)))*2.0-cp1*t18*t19*2.0))/2.0+t3*t25*t27*((n2/fabs(n2))))*2.0;
+			grad[0] += (pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r)*((cp2*(cp1*n2-cp2*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+(cp3*(cp1-cp3*n1)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+fabs(n1)*((n1/fabs(n1)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n1)*((n1/fabs(n1)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n1)*((n1/fabs(n1)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0)*-2.0;
+			grad[1] += (pow(cp1*n2-cp2*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp1-cp3*n1,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+pow(cp2-cp3*n2,2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)-r*r)*((cp1*(cp1*n2-cp2*n1)*-2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+(cp3*(cp2-cp3*n2)*2.0)/(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0)+fabs(n2)*((n2/fabs(n2)))*pow(cp1*n2-cp2*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n2)*((n2/fabs(n2)))*pow(cp1-cp3*n1,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0+fabs(n2)*((n2/fabs(n2)))*pow(cp2-cp3*n2,2.0)*1.0/pow(pow(fabs(n1),2.0)+pow(fabs(n2),2.0)+1.0,2.0)*2.0)*-2.0;
 		}
 
 		cost /= num_pc;
