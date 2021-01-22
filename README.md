@@ -51,6 +51,11 @@ The compile flag of us_image_processing OpenIGTLink_DIR should be set to the bui
 ---
 ## Launch 
 1. Setup Ultrasound system, make the ros topic of US images available.
+
+For the system setup with Cephasonics and ImFusion, use the following command:
+
+    CS_MEDIANWINDOW=2 CS_MOVAVGWINDOW=2 CS_SYSCFG_MASTER=0 CS_SYSCFG_SINGLE=1 CS_USB_FORCE=1 ImFusionSuite
+
 2. Setup the following configuration files according to your system:
     - us_image_processing/launch/config.yaml
     - us_controller/launch/config.yaml

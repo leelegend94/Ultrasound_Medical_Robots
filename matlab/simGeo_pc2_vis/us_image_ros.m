@@ -7,7 +7,7 @@ VIS_VESSEL = true;
 tftree = rostf;
 
 %init
-R = eul2rotm([0.0,0,-pi/2]);
+R = eul2rotm([0.1,0,-pi/2]);
 T = [0.6; 0; 0.08];
 Hvw = [R T; 0 0 0 1];
 
