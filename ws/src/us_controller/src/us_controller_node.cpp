@@ -23,7 +23,7 @@
 
 #include <pcl_msgs/ModelCoefficients.h>
 
-// #define SIM
+#define SIM
 //#define USE_PCL
 
 const std::string BASE_LINK = "iiwa_link_0";

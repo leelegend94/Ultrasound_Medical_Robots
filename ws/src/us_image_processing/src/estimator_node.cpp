@@ -25,7 +25,7 @@
 #include <limits>
 #include <random>
 
-// #define SIM
+#define SIM
 
 const double PC_SCALING = 100; //100
 const double SCREW_FACTOR = 5; //5
@@ -223,7 +223,7 @@ private:
 			t29 = t24*t27;
 			t30 = -t29;
 			t31 = r+t30;
-			
+
 			//cylinder fitting
 			cost += t31*t31;
 
@@ -322,6 +322,13 @@ public:
 			ROS_INFO_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n[0]<<", "<<n[1]<<", 1.0 r = "<<n[2]<<"\nepsilon = "<<n[3]);
 		}
 		catch (std::exception &e){
+			dt = (ros::Time::now()-ti).toSec();
+			if(isFix_r){
+				ROS_INFO_STREAM("target: n, elapsed time: "<< dt);
+			}
+			else{
+				ROS_INFO_STREAM("target: r, elapsed time: "<< dt);
+			}
 			ROS_WARN_STREAM("Failed to find solution in optimization problem: " << e.what());
 			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n[0]<<", "<<n[1]<<", 1.0 r = "<<n[2]<<"\nepsilon = "<<n[3]);
 			//ros::shutdown();
@@ -534,11 +541,11 @@ int main(int argc, char** argv){
 
 		if(INIT) pub_vesselState.publish(msg_vesselState);
 
-		std::cout << "!!! " <<n[0]<< std::endl;
+		// std::cout << "!!! " <<n[0]<< std::endl;
 		rescaling(n);
 		n[0] += distribution(generator);
 		n[1] += distribution(generator);
-		std::cout << "???" <<n[0]<< std::endl;
+		// std::cout << "???" <<n[0]<< std::endl;
 
 		tf = ros::Time::now();
 		//ROS_INFO_STREAM("est. rate: "<<1/(tf-ti).toSec()<<"Hz");
