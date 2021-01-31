@@ -1,6 +1,6 @@
 function n_truth = calcNtrue()
-data_start = readtable('data_start_point.csv');
-data_end = readtable('data_end_point.csv');
+data_start = readtable('start_points.csv');
+data_end = readtable('end_points.csv');
 
 % len_start = size(data_start,1);
 % Calc Ground truth

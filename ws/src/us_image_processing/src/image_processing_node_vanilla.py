@@ -22,8 +22,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class ImageBuffer:
     def __init__(self):
         self.bridge = CvBridge()
-        #self.sub_img = rospy.Subscriber("/imfusion/cephasonics",Image,self.update_image)
-        self.sub_img = rospy.Subscriber("/us_image",Image,self.update_image)
+        self.sub_img = rospy.Subscriber("/imfusion/cephasonics",Image,self.update_image)
+        #self.sub_img = rospy.Subscriber("/us_image",Image,self.update_image)
         self.pub_img = rospy.Publisher("/mask",Image)
         # self.pub_img_debug = rospy.Publisher("/us_image",Image)
         self.img = None
@@ -59,8 +59,8 @@ if __name__ == '__main__':
 
     #init networks
     rospy.loginfo("loading UNet")
-    #PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_phantom.pth")
-    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_real.pth")
+    PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_phantom.pth")
+    #PATH = os.path.expanduser("~/workspace/us_robot/network/unet_usseg_real.pth")
     unet = UNet(init_features=64).to(device)
     unet.load_state_dict(torch.load(PATH))
     unet.eval()

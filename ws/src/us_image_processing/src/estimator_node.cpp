@@ -25,6 +25,8 @@
 #include <limits>
 #include <random>
 
+#include <chrono>
+
 #define SIM
 
 const double PC_SCALING = 100; //100
@@ -306,28 +308,34 @@ public:
 
 	double optimize(std::vector<double> &n){
 		double min_cost;
-		ros::Time ti, tf;
-		double dt;
+		// ros::Time ti, tf;
+		auto ti = std::chrono::high_resolution_clock::now();
+		// double dt;
 		try{
-			ti = ros::Time::now();
+			// ti = ros::Time::now();
+			
 			nlopt::result result = opt_.optimize(n, min_cost);
-			dt = (ros::Time::now()-ti).toSec();
-			if(isFix_r){
-				ROS_INFO_STREAM("target: n, elapsed time: "<< dt);
+			// dt = (ros::Time::now()-ti).toSec();
+			auto tf = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double, std::milli> dt = tf - ti;
+			if(!isFix_r){
+				ROS_INFO_STREAM("target: n, elapsed time: "<< std::setprecision(6)<< dt.count() <<" ms");
 			}
 			else{
-				ROS_INFO_STREAM("target: r, elapsed time: "<< dt);
+				ROS_INFO_STREAM("target: r, elapsed time: "<< std::setprecision(6)<< dt.count() <<" ms");
 			}
 
 			ROS_INFO_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n[0]<<", "<<n[1]<<", 1.0 r = "<<n[2]<<"\nepsilon = "<<n[3]);
 		}
 		catch (std::exception &e){
-			dt = (ros::Time::now()-ti).toSec();
-			if(isFix_r){
-				ROS_INFO_STREAM("target: n, elapsed time: "<< dt);
+			// dt = (ros::Time::now()-ti).toSec();
+			auto tf = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double, std::milli> dt = tf - ti;
+			if(!isFix_r){
+				ROS_INFO_STREAM("target: n, elapsed time: "<< std::setprecision(6)<< dt.count() <<" ms");
 			}
 			else{
-				ROS_INFO_STREAM("target: r, elapsed time: "<< dt);
+				ROS_INFO_STREAM("target: r, elapsed time: "<< std::setprecision(6)<< dt.count() <<" ms");
 			}
 			ROS_WARN_STREAM("Failed to find solution in optimization problem: " << e.what());
 			ROS_WARN_STREAM("\nMinimum cost: " << min_cost<<"\ncurrent n: "<<n[0]<<", "<<n[1]<<", 1.0 r = "<<n[2]<<"\nepsilon = "<<n[3]);

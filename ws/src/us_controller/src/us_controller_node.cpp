@@ -290,7 +290,7 @@ void USController::plan(const pcl_msgs::ModelCoefficients::ConstPtr& msg)
     marching = marching_vel_*y_axis;
     ROS_INFO_STREAM("y: "<<y_axis(0)<<','<<y_axis(1)<<','<<y_axis(2));
     ROS_INFO_STREAM("centroid: "<<centroid(0)<<','<<centroid(1)<<','<<centroid(2));
-    ROS_INFO_STREAM("dt: "<<dt);
+    std::cout<<"dt: "<< std::setprecision(9)<<dt<<std::endl;
     ROS_INFO_STREAM("marching: "<<marching(0)<<','<<marching(1)<<','<<marching(2));
     
     geometry_msgs::PoseStamped command;
