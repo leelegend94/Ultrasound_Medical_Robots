@@ -107,3 +107,15 @@ Initial pose is already reached (eg. init. by black magic):
 Run the estimator: 
 
     rosrun us_image_processing estimator_node
+
+If you would like to use some code from this repo, plese cite our paper "Autonomous Robotic Screening of Tubular Structures based only on Real-Time Ultrasound Imaging Feedback".
+
+ @ARTICLE{9484669,
+  author={Jiang, Zhongliang and Li, Zhenyu and Grimm, Matthias and Zhou, Mingchuan and Esposito, Marco and Wein, Wolfgang and Stechele, Walter and Wendler, Thomas and Navab, Nassir},
+  journal={IEEE Transactions on Industrial Electronics}, 
+  title={Autonomous Robotic Screening of Tubular Structures based only on Real-Time Ultrasound Imaging Feedback}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={1-1},
+  doi={10.1109/TIE.2021.3095787}}
